@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Calendrier météo des interventions drone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Local : python -m http.server 3000 -->
+  <!-- Ouvrir : http://localhost:3000/calendrier_meteo_drone.htm -->
+  <style>
+    /* Thème sombre simple */
+    :root {
+      --bg-color: #121212;
+      --fg-color: #e0e0e0;
+      --accent-color: #90caf9;
+      --border-color: #333;
+      --fav-threshold-color: #4caf50;
+      --lim-threshold-color: #ffeb3b;
+      --def-threshold-color: #f44336;
+      --color-text-def: #b0b0b0;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--fg-color);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans",sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    header > * { margin-right: 1rem; }
+    button, input[type="number"], select, label {
+      background-color: #1e1e1e;
+      color: var(--fg-color);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+    }
+    button:hover { background-color: #2a2a2a; }
+    input[type="checkbox"] { margin-left: 0.3rem; transform: scale(1.2); }
+
+    /* Bandeau jours de la semaine (7 colonnes) */
+    #calendar-container { margin-top: .5rem; }
+    #weekday-headers {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+    }
+    .weekday-header {
+      text-align: center;
+      font-weight: bold;
+      padding: 0.5rem;
+      background-color: #1e1e1e;
+      border-right: 1px solid var(--border-color);
+    }
+    .weekday-header:last-child { border-right: none; }
+
+    /* Grille du calendrier (7 colonnes) */
+    #calendar {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 1rem;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      border: 1px solid var(--border-color);
+      border-top: none;
+    }
+    .day-cell {
+      min-height: 90px;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: var(--bg-color);
+      color: var(--fg-color);
+      position: relative;
+    }
+    .day-cell.indisponible { background-color: #2a2a2a; color: var(--color-text-def); }
+    .day-cell.today { outline: 2px solid var(--accent-color); outline-offset: -2px; }
+    .day-number { font-weight: 700; margin-bottom: 0.35rem; font-size: .95rem; }
+    .day-info { font-size: 0.8rem; line-height: 1.2; }
+
+    #debug-panel {
+      background-color: #1e1e1e;
+      color: var(--fg-color);
+      border-top: 1px solid var(--border-color);
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    #debug-toggle {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background-color: var(--accent-color);
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="prev-month">Mois précédent</button>
+    <button id="next-month">Mois suivant</button>
+    <button id="today-btn">Aujourd’hui</button>
+    <button id="export-ics">Export .ics</button>
+
+    <label for="profile-select">Profil :</label>
+    <select id="profile-select">
+      <option value="inspection">Inspection toiture</option>
+      <option value="thermo">Thermographie PV</option>
+      <option value="nettoyage">PV Cleaning / Nettoyage</option>
+      <option value="pulverisation">Démoussage toiture / Pulvérisation</option>
+    </select>
+
+    <label for="threshold-input">Seuil favorable :</label>
+    <input type="number" id="threshold-input" min="0" max="100" step="1">
+
+    <label><input type="checkbox" id="mode-conservateur"> Mode conservateur</label>
+    <label><input type="checkbox" id="mode-hors-ligne"> Mode hors‑ligne (simulé)</label>
+
+    <div id="lieu-info">Montpellier centre (43.62, 3.8799996)</div>
+  </header>
+
+  <div id="calendar-container">
+    <div id="weekday-headers">
+      <div class="weekday-header">Lun</div>
+      <div class="weekday-header">Mar</div>
+      <div class="weekday-header">Mer</div>
+      <div class="weekday-header">Jeu</div>
+      <div class="weekday-header">Ven</div>
+      <div class="weekday-header">Sam</div>
+      <div class="weekday-header">Dim</div>
+    </div>
+    <div id="calendar"></div>
+  </div>
+
+  <div id="debug-panel">
+    <h3>Debug</h3>
+    <div id="debug-content"></div>
+  </div>
+  <button id="debug-toggle">⋯</button>
+
+  <script>
+  (function(){
+    // --- Profils et seuils par défaut ---
+    const PROFILES = {
+      inspection: { defaultThreshold: 65, demoussage: { windIdealMax: 25, windHardMax: 50, rainStrict: false, tempMin: 20, tempMax: 35 } },
+      thermo:     { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 15, tempMax: 35 } },
+      nettoyage:  { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 10, tempMax: 30 } },
+      pulverisation: { defaultThreshold: 75, demoussage: { windIdealMax: 12, windHardMax: 20, rainStrict: true,  tempMin: 8,  tempMax: 30 } }
+    };
+
+    // --- État ---
+    let currentDate = new Date(); currentDate.setDate(1); currentDate.setHours(0,0,0,0);
+    const lieu = { lat: 43.62, lon: 3.8799996 };
+    let modeConservateur = false;
+    let modeHorsLigne = false;
+    let profile = 'inspection';
+    let seuilFavorable = PROFILES[profile].defaultThreshold;
+
+    // Debug
+    const debug = { logs:[], urls:[], statusCodes:[], renderedCells:0, daysAggregated:0, errors:[] };
+
+    // DOM
+    const prevBtn = document.getElementById('prev-month');
+    const nextBtn = document.getElementById('next-month');
+    const todayBtn = document.getElementById('today-btn');
+    const exportBtn = document.getElementById('export-ics');
+    const profileSelect = document.getElementById('profile-select');
+    const thresholdInput = document.getElementById('threshold-input');
+    const conservCheckbox = document.getElementById('mode-conservateur');
+    const offlineCheckbox = document.getElementById('mode-hors-ligne');
+    const calendarEl = document.getElementById('calendar');
+    const debugContent = document.getElementById('debug-content');
+    const debugToggle = document.getElementById('debug-toggle');
+    const debugPanel = document.getElementById('debug-panel');
+
+    thresholdInput.value = seuilFavorable;
+
+    // Panneau debug toggle
+    debugToggle.addEventListener('click', () => {
+      debugPanel.style.display = (debugPanel.style.display === 'none') ? 'block' : 'none';
+    });
+
+    // Événements
+    prevBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); render(); });
+    nextBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); render(); });
+    todayBtn.addEventListener('click', () => { const t = new Date(); t.setDate(1); t.setHours(0,0,0,0); currentDate = t; render(); });
+    profileSelect.addEventListener('change', () => { profile = profileSelect.value; seuilFavorable = PROFILES[profile].defaultThreshold; thresholdInput.value = seuilFavorable; render(); });
+    thresholdInput.addEventListener('input', () => { const v = parseInt(thresholdInput.value, 10); if (!isNaN(v) && v >= 0 && v <= 100) { seuilFavorable = v; render(); } });
+    conservCheckbox.addEventListener('change', () => { modeConservateur = conservCheckbox.checked; render(); });
+    offlineCheckbox.addEventListener('change', () => { modeHorsLigne = offlineCheckbox.checked; render(); });
+    exportBtn.addEventListener('click', exportICS);
+
+    // Utils dates
+    function addDays(date, days){ const d=new Date(date); d.setDate(d.getDate()+days); return d; }
+    function formatDateYYYYMMDD(date){ const y=date.getFullYear(); const m=('0'+(date.getMonth()+1)).slice(-2); const d=('0'+date.getDate()).slice(-2); return `${y}-${m}-${d}`; }
+
+    // Fetch météo (segmentation & cap J+15)
+    async function fetchWeather(startDate, endDate){
+      const today=new Date(); today.setHours(0,0,0,0);
+      const horizon=addDays(today,15);
+
+      const realStart = startDate < today ? today : startDate;
+      const realEnd   = endDate   > horizon ? horizon : endDate;
+      if (realStart > realEnd) return { daily:{ time:[] } };
+
+      const allData = { daily:{ time:[], precipitation_sum:[], rain_sum:[], wind_gusts_10m_max:[], temperature_2m_max:[], temperature_2m_min:[], cloudcover_mean:[], shortwave_radiation_sum:[] } };
+
+      let cur=new Date(realStart);
+      const fetchPromises=[];
+      while(cur<=realEnd){
+        const segStart=new Date(cur);
+        const segEnd = (addDays(segStart,15) < realEnd) ? addDays(segStart,15) : new Date(realEnd);
+
+        const params=new URLSearchParams({
+          latitude: lieu.lat, longitude: lieu.lon,
+          daily: 'precipitation_sum,rain_sum,wind_gusts_10m_max,temperature_2m_max,temperature_2m_min,cloudcover_mean,shortwave_radiation_sum',
+          timezone: 'Europe/Paris',
+          start_date: formatDateYYYYMMDD(segStart),
+          end_date: formatDateYYYYMMDD(segEnd)
+        });
+        const url=`https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+        debug.urls.push(url);
+
+        const p = fetch(url).then(res=>{
+          debug.statusCodes.push(res.status);
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          return res.json();
+        }).then(json=>{
+          const d=json.daily || {};
+          for(const k of Object.keys(allData.daily)){
+            if(Array.isArray(d[k])) allData.daily[k] = allData.daily[k].concat(d[k]);
+          }
+        }).catch(err=>{ debug.errors.push({url, error:String(err)}); });
+        fetchPromises.push(p);
+
+        cur = addDays(segEnd,1);
+      }
+      await Promise.all(fetchPromises);
+      return allData;
+    }
+
+    // Scoring par profil
+    function scoreForDay(dayData){
+      if(modeHorsLigne){
+        return { score: Math.floor(seuilFavorable)+Math.floor(Math.random()*(101-seuilFavorable)), details:{note:'hors-ligne'} };
+      }
+      const p=PROFILES[profile];
+      const wind=Number(dayData.wind_gusts_10m_max||0);
+      const rain=Number(dayData.rain_sum ?? dayData.precipitation_sum ?? 0);
+      const irr =(Number(dayData.shortwave_radiation_sum||0))*277.78;
+      const tmax=Number(dayData.temperature_2m_max||0);
+      const tmin=Number(dayData.temperature_2m_min||0);
+
+      const scores={};
+
+      // Thermographie PV
+      { const windScore = wind<=15?1:(wind>=35?0:(1-(wind-15)/20));
+        const rainScore = rain===0?1:(rain<2?0.6:0.1);
+        const irrScore  = irr<=2500?(irr/2500):(irr>=5000?1:((irr-2500)/2500));
+        const tmean=(tmax+tmin)/2, tempScore=(Math.abs(tmean-24)>=10?0:(1-Math.abs(tmean-24)/10));
+        const s=0.35*windScore+0.4*rainScore+0.2*irrScore+0.05*tempScore;
+        scores.thermo={score:s*100}; }
+
+      // Nettoyage PV
+      { const windScore = wind<=20?1:(wind>=40?0:(1-(wind-20)/20));
+        const rainScore = rain===0?1:(rain<1?0.7:0.05);
+        const tmean=(tmax+tmin)/2, tempScore=(Math.abs(tmean-22)>=10?0:(1-Math.abs(tmean-22)/10));
+        const s=0.45*windScore+0.45*rainScore+0.1*tempScore;
+        scores.nettoyage={score:s*100}; }
+
+      // Inspection
+      { const windScore = wind<=25?1:(wind>=50?0:(1-(wind-25)/25));
+        const rainScore = rain===0?1:(rain<2?0.6:0.1);
+        const tmean=(tmax+tmin)/2, tempScore=(Math.abs(tmean-20)>=10?0:(1-Math.abs(tmean-20)/10));
+        const s=0.5*windScore+0.45*rainScore+0.05*tempScore;
+        scores.inspection={score:s*100}; }
+
+      // Démoussage
+      { const prm=p.demoussage;
+        const windScore = wind<=prm.windIdealMax?1:(wind>=prm.windHardMax?0:(1-(wind-prm.windIdealMax)/(prm.windHardMax-prm.windIdealMax)));
+        const rainScore = prm.rainStrict ? (rain===0?1:0) : (rain===0?1:(rain<1?0.7:0.1));
+        let diff=0; if(tmin<prm.tempMin) diff+=prm.tempMin-tmin; if(tmax>prm.tempMax) diff+=tmax-prm.tempMax;
+        const tempScore = Math.max(0,1-diff/10);
+        const s=0.55*windScore+0.35*rainScore+0.1*tempScore;
+        scores.pulverisation={score:s*100}; }
+
+      if(modeConservateur){
+        let m=Infinity; for(const k in scores) m=Math.min(m, scores[k].score); return {score:m};
+      } else {
+        let s=0,c=0; for(const k in scores){ s+=scores[k].score; c++; } return {score:s/c};
+      }
+    }
+
+    // Rendu
+    async function render(){
+      debug.urls=[]; debug.statusCodes=[]; debug.logs=[]; debug.errors=[]; debug.renderedCells=0; debug.daysAggregated=0;
+      calendarEl.innerHTML=''; debugContent.textContent='';
+
+      const y=currentDate.getFullYear(), m=currentDate.getMonth();
+      const first=new Date(y,m,1), last=new Date(y,m+1,0);
+
+      const startWeekDay=(first.getDay()+6)%7; // Lun=0
+      for(let i=0;i<startWeekDay;i++){ const e=document.createElement('div'); e.className='day-cell indisponible'; calendarEl.appendChild(e); }
+
+      const today=new Date(); today.setHours(0,0,0,0);
+
+      const daysInMonth=last.getDate();
+      const minDate=new Date(y,m,1);
+      const maxDate=new Date(y,m,daysInMonth);
+      const weatherData=await fetchWeather(minDate,maxDate);
+
+      const wd = (weatherData.daily && Array.isArray(weatherData.daily.time)) ? {} : null;
+      if(wd){
+        weatherData.daily.time.forEach((ts,idx)=>{
+          wd[ts]={
+            precipitation_sum: weatherData.daily.precipitation_sum[idx],
+            rain_sum: weatherData.daily.rain_sum[idx],
+            wind_gusts_10m_max: weatherData.daily.wind_gusts_10m_max[idx],
+            temperature_2m_max: weatherData.daily.temperature_2m_max[idx],
+            temperature_2m_min: weatherData.daily.temperature_2m_min[idx],
+            cloudcover_mean: weatherData.daily.cloudcover_mean[idx],
+            shortwave_radiation_sum: weatherData.daily.shortwave_radiation_sum[idx]
+          };
+        });
+      }
+
+      for(let d=1; d<=daysInMonth; d++){
+        const dt=new Date(y,m,d);
+        const cell=document.createElement('div'); cell.className='day-cell';
+        const dayNum=document.createElement('div'); dayNum.className='day-number'; dayNum.textContent=d; cell.appendChild(dayNum);
+        if(dt.getTime()===today.getTime()) cell.classList.add('today');
+
+        const infoDiv=document.createElement('div'); infoDiv.className='day-info';
+        const dateStr=formatDateYYYYMMDD(dt);
+
+        if(wd && wd[dateStr]){
+          const s=scoreForDay(wd[dateStr]); const score=Math.round(s.score); debug.daysAggregated++;
+          const category = (score>=seuilFavorable)?'Favorable':(score>=45?'Limite':'Défavorable');
+          const colorH=Math.round((score/100)*120);
+          cell.style.backgroundColor=`hsl(${colorH},70%,50%)`; cell.style.color='#000';
+          infoDiv.textContent = `${category} · vent ${wd[dateStr].wind_gusts_10m_max} km/h · pluie ${wd[dateStr].rain_sum} mm · T° ${wd[dateStr].temperature_2m_min}‑${wd[dateStr].temperature_2m_max} °C`;
+        } else {
+          cell.classList.add('indisponible');
+          infoDiv.textContent='Météo indisponible';
+        }
+
+        cell.appendChild(infoDiv); calendarEl.appendChild(cell); debug.renderedCells++;
+      }
+
+      const totalCells=debug.renderedCells+startWeekDay, remainder=totalCells%7;
+      if(remainder!==0){ const toAdd=7-remainder; for(let i=0;i<toAdd;i++){ const e=document.createElement('div'); e.className='day-cell indisponible'; calendarEl.appendChild(e); } }
+
+      updateDebugPanel();
+    }
+
+    function updateDebugPanel(){
+      const L=[];
+      L.push(`Profil: ${profile}`);
+      L.push(`Seuil favorable: ${seuilFavorable}`);
+      L.push(`Mode conservateur: ${modeConservateur}`);
+      L.push(`Mode hors‑ligne: ${modeHorsLigne}`);
+      L.push(`Nombre d’URLs appelées: ${debug.urls.length}`);
+      debug.urls.forEach((u,i)=> L.push(`URL ${i+1}: ${u} → HTTP ${debug.statusCodes[i]??'‑'}`));
+      L.push(`Jours avec données météo: ${debug.daysAggregated}`);
+      L.push(`Cases rendues (jours du mois): ${debug.renderedCells}`);
+      if(debug.errors.length){ L.push('Erreurs:'); debug.errors.forEach(e=> L.push(`• ${e.url} → ${e.error}`)); }
+      debugContent.textContent=L.join('\n');
+    }
+
+    // Export ICS
+    function exportICS(){
+      const y=currentDate.getFullYear(), m=currentDate.getMonth();
+      const last=new Date(y,m+1,0), daysInMonth=last.getDate();
+      const minDate=new Date(y,m,1), maxDate=new Date(y,m,daysInMonth);
+      fetchWeather(minDate,maxDate).then(weatherData=>{
+        const wd=(weatherData.daily && Array.isArray(weatherData.daily.time))?{}:null;
+        if(wd){
+          weatherData.daily.time.forEach((ts,idx)=>{
+            wd[ts]={
+              precipitation_sum: weatherData.daily.precipitation_sum[idx],
+              rain_sum: weatherData.daily.rain_sum[idx],
+              wind_gusts_10m_max: weatherData.daily.wind_gusts_10m_max[idx],
+              temperature_2m_max: weatherData.daily.temperature_2m_max[idx],
+              temperature_2m_min: weatherData.daily.temperature_2m_min[idx],
+              cloudcover_mean: weatherData.daily.cloudcover_mean[idx],
+              shortwave_radiation_sum: weatherData.daily.shortwave_radiation_sum[idx]
+            };
+          });
+        }
+        const events=[];
+        for(let d=1; d<=daysInMonth; d++){
+          const dt=new Date(y,m,d), dateStr=formatDateYYYYMMDD(dt);
+          if(wd && wd[dateStr]){
+            const score=Math.round(scoreForDay(wd[dateStr]).score);
+            if(score>=seuilFavorable){
+              const dtstart=dateStr.replace(/-/g,'');
+              const dtendDate=new Date(dt); dtendDate.setDate(dt.getDate()+1);
+              const dtend=dtendDate.toISOString().slice(0,10).replace(/-/g,'');
+              const desc=`Vent: ${wd[dateStr].wind_gusts_10m_max} km/h\\nPluie: ${wd[dateStr].rain_sum} mm\\nT°: ${wd[dateStr].temperature_2m_min}‑${wd[dateStr].temperature_2m_max} °C\\nCouverture nuageuse: ${wd[dateStr].cloudcover_mean}%\\nIrradiance: ${Math.round((wd[dateStr].shortwave_radiation_sum||0)*277.78)} Wh/m²`;
+              events.push(`BEGIN:VEVENT
+DTSTART;VALUE=DATE:${dtstart}
+DTEND;VALUE=DATE:${dtend}
+SUMMARY:Fenêtre météo favorable (${score})
+DESCRIPTION:${desc}
+END:VEVENT`);
+            }
+          }
+        }
+        if(events.length===0){ alert('Aucun jour favorable à exporter ce mois.'); return; }
+        const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Calendrier Meteo Drone//FR'].concat(events).concat('END:VCALENDAR').join('\\r\\n');
+        const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+        const url=URL.createObjectURL(blob); const a=document.createElement('a');
+        a.href=url; a.download=`favorable_${y}_${('0'+(m+1)).slice(-2)}.ics`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
+    }
+
+    // Premier rendu
+    render();
+  })();
+  </script>
+</body>
+</html>
