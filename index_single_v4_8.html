@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Calendrier météo drone — vent & seuil couleur</title>
+  <title>Calendrier météo drone — vent & seuil couleur (no-fly CDC)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Local : python -m http.server 3000 -->
   <style>
@@ -63,6 +63,9 @@
     #debug-toggle { position: fixed; bottom: 12px; right: 12px; background: var(--accent-color); color:#000; border:0; width: 36px; height: 36px; border-radius: 50%; cursor:pointer; font-weight:700; }
     .muted { color: var(--muted); }
     .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    details.ref { max-width:1000px; margin:8px auto 0; color:#cfe3ff; }
+    details.ref summary { cursor:pointer; padding:6px 10px; background:#1c2233; border:1px solid #27324a; border-radius:8px; }
+    details.ref .box { padding:10px 12px; border-left:3px solid #27324a; background:#121826; }
   </style>
 </head>
 <body>
@@ -100,6 +103,19 @@
     </div>
   </header>
 
+  <!-- Référence no-fly CDC -->
+  <details class="ref">
+    <summary>Référence no-fly (rafales 10 m)</summary>
+    <div class="box">
+      <ul>
+        <li><strong>Thermographie PV</strong> → <strong>35 km/h</strong> — sensibilité au flou/rolling-shutter et stabilité thermique (≈80% de la spec M350).</li>
+        <li><strong>Inspection toiture</strong> → <strong>40 km/h</strong> — un peu plus tolérant, mais risques bord de toit / effet voile H20.</li>
+        <li><strong>Nettoyage PV</strong> → <strong>38 km/h</strong> — sécurité opérateur, trajectoires lentes proches des panneaux (jets sensibles aux rafales).</li>
+        <li><strong>Pulvérisation / Démoussage</strong> → <strong>20 km/h</strong> — dérive/overspray, tenue très basse hauteur, sécurité (stricte).</li>
+      </ul>
+    </div>
+  </details>
+
   <div id="weekday-headers">
     <div class="weekday-header">Lun</div><div class="weekday-header">Mar</div><div class="weekday-header">Mer</div>
     <div class="weekday-header">Jeu</div><div class="weekday-header">Ven</div><div class="weekday-header">Sam</div><div class="weekday-header">Dim</div>
@@ -115,29 +131,35 @@
   <script>
   (function(){
     try {
-      /* Profils (seuils par défaut + limites vent) */
+      /* Profils (seuils par défaut) */
       var PROFILES = {
         inspection:     { defaultThreshold: 65, demoussage: { windIdealMax: 25, windHardMax: 50, rainStrict: false, tempMin: 20, tempMax: 35 } },
         thermo:         { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 15, tempMax: 35 } },
         nettoyage:      { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 10, tempMax: 30 } },
         pulverisation:  { defaultThreshold: 75, demoussage: { windIdealMax: 12, windHardMax: 20, rainStrict: true,  tempMin: 8,  tempMax: 30 } }
       };
-      var HARD_WIND_MAX = { inspection: 45, thermo: 35, nettoyage: 40, pulverisation: 20 }; // km/h
+
+      /* >>> NO-FLY CDC (rafales 10m) <<< */
+      var HARD_WIND_MAX = {
+        thermo: 35,        // Thermographie PV
+        inspection: 40,    // Inspection toiture
+        nettoyage: 38,     // Nettoyage PV
+        pulverisation: 20  // Pulvérisation / Démoussage
+      };
 
       /* Paramétrage couleur vent ↔ seuil */
-      var MIN_GREEN_WIND = 10; // km/h : vert garanti si seuil=100 (exigeant)
+      var MIN_GREEN_WIND = 10; // km/h : vert garanti si seuil=100
 
       function windGreenMaxFromSeuil(seuil, windNoFly){
-        // seuil=0 -> greenMax ~ noFly ; seuil=100 -> greenMax = MIN_GREEN_WIND
         var g = MIN_GREEN_WIND + (1 - (seuil/100)) * (windNoFly - MIN_GREEN_WIND);
         return Math.max(MIN_GREEN_WIND, Math.min(windNoFly-1, Math.round(g)));
       }
       function paintByWind(cell, wind, seuil, windNoFly){
         var gMax = windGreenMaxFromSeuil(seuil, windNoFly);
         var bg, fg;
-        if (wind >= windNoFly) { bg='hsl(0,75%,45%)'; fg='#fff'; }          // rouge : no-fly
-        else if (wind > gMax)  { bg='hsl(45,90%,50%)'; fg='#000'; }         // jaune : entre vert et no-fly
-        else                   { bg='hsl(130,75%,40%)'; fg='#fff'; }         // vert : vent ≤ gMax
+        if (wind >= windNoFly) { bg='hsl(0,75%,45%)'; fg='#fff'; }     // rouge : no-fly
+        else if (wind > gMax)  { bg='hsl(45,90%,50%)'; fg='#000'; }    // jaune : entre vert et no-fly
+        else                   { bg='hsl(130,75%,40%)'; fg='#fff'; }   // vert : vent ≤ gMax
         cell.style.backgroundColor = bg; cell.style.color = fg;
       }
 
@@ -230,8 +252,18 @@
         else if(profile==='nettoyage'){ var ws2=wind<=20?1:(wind>=40?0:(1-(wind-20)/20)), rs2=rain===0?1:(rain<1?0.7:0.05), tm2=(tmax+tmin)/2, ts2=Math.abs(tm2-22)>=10?0:(1-Math.abs(tm2-22)/10); s=(0.45*ws2+0.45*rs2+0.10*ts2)*100; }
         else if(profile==='inspection'){ var ws3=wind<=25?1:(wind>=50?0:(1-(wind-25)/25)), rs3=rain===0?1:(rain<2?0.6:0.1), tm3=(tmax+tmin)/2, ts3=Math.abs(tm3-20)>=10?0:(1-Math.abs(tm3-20)/10); s=(0.50*ws3+0.45*rs3+0.05*ts3)*100; }
         else { var prm=PROFILES.pulverisation.demoussage, ws4=wind<=prm.windIdealMax?1:(wind>=prm.windHardMax?0:(1-(wind-prm.windIdealMax)/(prm.windHardMax-prm.windIdealMax))), rs4=prm.rainStrict?(rain===0?1:0):(rain===0?1:(rain<1?0.7:0.1)), diff=0; if(tmin<prm.tempMin) diff+=prm.tempMin-tmin; if(tmax>prm.tempMax) diff+=tmax-prm.tempMax; var ts4=Math.max(0,1-diff/10); s=(0.55*ws4+0.35*rs4+0.10*ts4)*100; }
-        var noFly80=(HARD_WIND_MAX[profile]||999)*0.8; if(modeConservateur && (wind>=noFly80 || rain>=1)) s=Math.max(0,s-10);
+        var noFly80=noFly*0.8; if(modeConservateur && (wind>=noFly80 || rain>=1)) s=Math.max(0,s-10);
         return {score:s};
+      }
+
+      /* Couleur basée sur vent + seuil */
+      function paintByWind(cell, wind, seuil, windNoFly){
+        var gMax = windGreenMaxFromSeuil(seuil, windNoFly);
+        var bg, fg;
+        if (wind >= windNoFly) { bg='hsl(0,75%,45%)'; fg='#fff'; }
+        else if (wind > gMax)  { bg='hsl(45,90%,50%)'; fg='#000'; }
+        else                   { bg='hsl(130,75%,40%)'; fg='#fff'; }
+        cell.style.backgroundColor = bg; cell.style.color = fg;
       }
 
       /* Rendu */
