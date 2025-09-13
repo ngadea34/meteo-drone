@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Calendrier météo des interventions drone — v2 (no-fly)</title>
+  <title>Calendrier météo des interventions drone — v2 (no-fly, robuste)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Local : python -m http.server 3000 -->
   <!-- Ouvrir : http://localhost:3000/calendrier_meteo_drone_v2.htm -->
@@ -53,9 +53,7 @@
       border-bottom: none;
     }
     #calendar { border-top: none; border-bottom: 1px solid var(--border-color); grid-auto-rows: minmax(110px,auto); }
-    .weekday-header {
-      text-align: center; font-weight: 600; padding: 8px; background-color: #171c29; border-right: 1px solid var(--border-color);
-    }
+    .weekday-header { text-align: center; font-weight: 600; padding: 8px; background-color: #171c29; border-right: 1px solid var(--border-color); }
     .weekday-header:last-child{ border-right: none; }
     .day-cell { padding: 8px; background-color: #101521; border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display:flex; flex-direction: column; justify-content: space-between; }
     .day-cell.indisponible { background-color: #1a2233; color: #b8c0cc; }
@@ -63,163 +61,4 @@
     .day-number { font-weight: 700; font-size: .95rem; opacity:.95; }
     .day-info { font-size: .82rem; color: #eef5ff; }
     #status { margin-left: 8px; color: var(--muted); font-size: .9rem; }
-    #debug-panel { background:#0f1422; border-top:1px solid #26324b; padding:10px 12px; font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; color:#a6d3ff; max-height: 220px; overflow:auto; }
-    #debug-toggle { position: fixed; bottom: 12px; right: 12px; background: var(--accent-color); color:#000; border:0; width: 36px; height: 36px; border-radius: 50%; cursor:pointer; font-weight:700; }
-    .muted { color: var(--muted); }
-    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="row">
-      <button id="prev-month">⟵</button>
-      <div id="month-label" class="chip" style="min-width:180px;text-align:center">—</div>
-      <button id="next-month">⟶</button>
-      <button id="today-btn">Aujourd’hui</button>
-      <button id="export-ics">Export .ics</button>
-      <span id="status" class="muted"></span>
-    </div>
-
-    <div class="controls">
-      <label>Profil
-        <select id="profile-select">
-          <option value="inspection">Inspection toiture</option>
-          <option value="thermo">Thermographie PV</option>
-          <option value="nettoyage">PV Cleaning / Nettoyage</option>
-          <option value="pulverisation">Démoussage / Pulvérisation</option>
-        </select>
-      </label>
-      <label>Seuil favorable
-        <input type="number" id="threshold-input" min="0" max="100" step="1" style="width:80px">
-      </label>
-      <label class="row"><input type="checkbox" id="mode-conservateur"> Mode conservateur</label>
-      <label class="row"><input type="checkbox" id="mode-hors-ligne"> Mode hors-ligne</label>
-    </div>
-
-    <div class="loc-controls">
-      <div id="lieu-info" class="chip">Montpellier centre (43.62000, 3.88000)</div>
-      <input type="text" id="address-input" placeholder="Saisir une adresse ou ville…">
-      <button id="btn-geocode" title="Rechercher l’adresse et centrer">Mettre à jour le lieu</button>
-      <button id="btn-setll" title="Saisir lat/lon manuellement">Lat/Lon</button>
-    </div>
-  </header>
-
-  <div id="calendar-container">
-    <div id="weekday-headers">
-      <div class="weekday-header">Lun</div>
-      <div class="weekday-header">Mar</div>
-      <div class="weekday-header">Mer</div>
-      <div class="weekday-header">Jeu</div>
-      <div class="weekday-header">Ven</div>
-      <div class="weekday-header">Sam</div>
-      <div class="weekday-header">Dim</div>
-    </div>
-    <div id="calendar"></div>
-  </div>
-
-  <div id="debug-panel">
-    <strong>Debug</strong>
-    <div id="debug-content"></div>
-  </div>
-  <button id="debug-toggle">⋯</button>
-
-  <script>
-  (function(){
-    /* Profils et seuils par défaut */
-    const PROFILES = {
-      inspection:     { defaultThreshold: 65, demoussage: { windIdealMax: 25, windHardMax: 50, rainStrict: false, tempMin: 20, tempMax: 35 } },
-      thermo:         { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 15, tempMax: 35 } },
-      nettoyage:      { defaultThreshold: 70, demoussage: { windIdealMax: 15, windHardMax: 30, rainStrict: false, tempMin: 10, tempMax: 30 } },
-      pulverisation:  { defaultThreshold: 75, demoussage: { windIdealMax: 12, windHardMax: 20, rainStrict: true,  tempMin: 8,  tempMax: 30 } }
-    };
-
-    /* Seuils vent "no-fly" : au-delà, score=0 pour le profil sélectionné */
-    const HARD_WIND_MAX = {
-      inspection: 45,  // km/h
-      thermo: 35,
-      nettoyage: 40,
-      pulverisation: 20
-    };
-
-    /* État */
-    let currentDate = new Date(); currentDate.setDate(1); currentDate.setHours(0,0,0,0);
-    const lieu = { lat: 43.62, lon: 3.8799996, name: 'Montpellier centre' };
-    let modeConservateur = false;
-    let modeHorsLigne = false;
-    let profile = 'inspection';
-    let seuilFavorable = PROFILES[profile].defaultThreshold;
-
-    // Restauration du lieu (localStorage)
-    (()=>{  
-      try{
-        const raw=localStorage.getItem('calLieu');
-        if(raw){ const o=JSON.parse(raw); if(o && typeof o.lat==='number' && typeof o.lon==='number'){ lieu.lat=o.lat; lieu.lon=o.lon; if(o.name) lieu.name=o.name; } }
-      }catch{}
-    })();
-
-    /* Debug */
-    const debug = { urls:[], statusCodes:[], renderedCells:0, daysAggregated:0, errors:[] };
-
-    /* DOM */
-    const prevBtn = document.getElementById('prev-month');
-    const nextBtn = document.getElementById('next-month');
-    const todayBtn = document.getElementById('today-btn');
-    const exportBtn = document.getElementById('export-ics');
-    const profileSelect = document.getElementById('profile-select');
-    const thresholdInput = document.getElementById('threshold-input');
-    const conservCheckbox = document.getElementById('mode-conservateur');
-    const offlineCheckbox = document.getElementById('mode-hors-ligne');
-    const calendarEl = document.getElementById('calendar');
-    const debugContent = document.getElementById('debug-content');
-    const debugToggle = document.getElementById('debug-toggle');
-    const debugPanel = document.getElementById('debug-panel');
-    const monthLabel = document.getElementById('month-label');
-    const statusEl = document.getElementById('status');
-    const addressInput = document.getElementById('address-input');
-    const btnGeocode = document.getElementById('btn-geocode');
-    const btnSetLL = document.getElementById('btn-setll');
-    const lieuInfo = document.getElementById('lieu-info');
-
-    function updateLieuInfo(){ lieuInfo.textContent = `${(lieu.name||'Lieu')} (${lieu.lat.toFixed(5)}, ${lieu.lon.toFixed(5)})`; }
-    function persistLieu(){ try{ localStorage.setItem('calLieu', JSON.stringify({lat:lieu.lat, lon:lieu.lon, name:lieu.name||''})); }catch{} }
-    updateLieuInfo();
-    thresholdInput.value = seuilFavorable;
-
-    /* UI */
-    debugToggle.addEventListener('click', () => {
-      debugPanel.style.display = (debugPanel.style.display === 'none') ? 'block' : 'none';
-    });
-
-    prevBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); render(); });
-    nextBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); render(); });
-    todayBtn.addEventListener('click', () => { const t = new Date(); t.setDate(1); t.setHours(0,0,0,0); currentDate = t; render(); });
-    profileSelect.addEventListener('change', () => { profile = profileSelect.value; seuilFavorable = PROFILES[profile].defaultThreshold; thresholdInput.value = seuilFavorable; render(); });
-    thresholdInput.addEventListener('input', () => { const v = parseInt(thresholdInput.value, 10); if (!isNaN(v) && v >= 0 && v <= 100) { seuilFavorable = v; render(false); } });
-    conservCheckbox.addEventListener('change', () => { modeConservateur = conservCheckbox.checked; render(false); });
-    offlineCheckbox.addEventListener('change', () => { modeHorsLigne = offlineCheckbox.checked; render(); });
-    exportBtn.addEventListener('click', exportICS);
-
-    btnGeocode.addEventListener('click', setLocationFromAddress);
-    btnSetLL.addEventListener('click', ()=>{
-      const lat = prompt('Latitude ?', String(lieu.lat));
-      const lon = prompt('Longitude ?', String(lieu.lon));
-      if(lat && lon && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lon))){
-        lieu.lat=parseFloat(lat); lieu.lon=parseFloat(lon); lieu.name='Coordonnées manuelles';
-        persistLieu(); updateLieuInfo(); render();
-      }
-    });
-
-    /* Utils */
-    function addDays(date, days){ const d=new Date(date); d.setDate(d.getDate()+days); return d; }
-    function formatDateYYYYMMDD(date){ const y=date.getFullYear(); const m=('0'+(date.getMonth()+1)).slice(-2); const d=('0'+date.getDate()).slice(-2); return `${y}-${m}-${d}`; }
-    function monthFR(d){ return d.toLocaleString('fr-FR',{month:'long',year:'numeric'}); }
-
-    /* Géocodage OSM/Nominatim */
-    async function geocodeAddress(q){
-      const u = new URL('https://nominatim.openstreetmap.org/search');
-      u.searchParams.set('q', q);
-      u.searchParams.set('format', 'json');
-      u.searchParams.set('limit', '1');
-      const res = await fetch(u.toString(), { headers: { 'Accept': 'application/json' } });
-      if(!res.ok) throw new Error('Geocode HTTP '+res.status);
-      const arr = a
+    #
