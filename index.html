@@ -11,156 +11,42 @@
       --gris: #f4f4f4;
     }
 
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #fff;
-      color: #000;
-    }
-
+    body { margin:0; font-family: system-ui, sans-serif; background:#fff; color:#000; }
     header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: var(--bleu);
-      color: white;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
+      position: fixed; top:0; left:0; right:0;
+      background: var(--bleu); color:white; padding:10px;
+      display:flex; justify-content: space-between; align-items:center;
+      z-index:1000;
     }
-
-    header h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    header .actions button {
-      margin-left: 10px;
-    }
-
-    main {
-      margin-top: 60px;
-      display: flex;
-    }
-
-    .col-gauche {
-      width: 65%;
-      padding: 10px;
-    }
-
-    .col-droite {
-      width: 35%;
-      padding: 10px;
-      background: #fafafa;
-      border-left: 1px solid #ddd;
-    }
-
-    section {
-      margin-bottom: 20px;
-      background: var(--gris);
-      padding: 10px;
-      border-radius: 4px;
-    }
-
-    h2 {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 5px;
-      text-align: left;
-    }
-
-    th {
-      background: #eee;
-    }
-
-    .fixed-btns {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-    }
-
+    header h1 { margin:0; font-size:20px; }
+    header .actions button { margin-left:10px; }
+    main { margin-top:60px; display:flex; }
+    .col-gauche { width:65%; padding:10px; }
+    .col-droite { width:35%; padding:10px; background:#fafafa; border-left:1px solid #ddd; position:sticky; top:60px; height:calc(100vh - 60px); overflow:auto; }
+    section { margin-bottom:20px; background: var(--gris); padding:10px; border-radius:4px; }
+    h2 { font-size:18px; margin-bottom:10px; }
+    table { width:100%; border-collapse: collapse; background:#fff; }
+    th, td { border:1px solid #ccc; padding:5px; text-align:left; }
+    th { background:#eee; }
     #slideover {
-      position: fixed;
-      top: 0;
-      right: -400px;
-      width: 400px;
-      height: 100%;
-      background: #fff;
-      border-left: 2px solid #ccc;
-      z-index: 20;
-      padding: 20px;
-      overflow-y: auto;
+      position: fixed; top:0; right:-420px; /* caché hors écran */
+      width:420px; height:100%; background:#fff;
+      border-left:2px solid #ccc; z-index:1500;
+      padding:20px; overflow-y:auto;
       transition: right 0.3s ease;
     }
-
-    #slideover.open {
-      right: 0;
-    }
-
+    #slideover.open { right:0; }
     .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--orange);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 4px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 100;
+      position: fixed; bottom:20px; right:20px;
+      background: var(--orange); color:white;
+      padding:10px 20px; border-radius:4px;
+      opacity:0; transition: opacity 0.3s ease;
+      z-index:2000;
     }
-
-    .toast.show {
-      opacity: 1;
-    }
-
-    .addon-offert {
-      font-style: italic;
-      color: #777;
-    }
-
-    .admin-tabs button.active {
-      background: var(--orange);
-      color: white;
-    }
-
-    .admin-content > div {
-      display: none;
-    }
-
-    .admin-content > div.active {
-      display: block;
-    }
-
+    .toast.show { opacity:1; }
     @media print {
-      header, .col-gauche .actions, .fixed-btns, #slideover, button {
-        display: none !important;
-      }
-
-      body {
-        background: white;
-      }
-
-      .col-gauche, .col-droite {
-        width: 100%;
-        float: none;
-        padding: 0;
-      }
-
-      section {
-        page-break-inside: avoid;
-      }
+      header, .actions, #slideover, button, input, select { display:none !important; }
+      body { background:#fff; }
     }
   </style>
 </head>
@@ -177,9 +63,12 @@
     <div class="col-gauche">
       <section id="sec-client">
         <h2>Client</h2>
-        <label>Téléphone:<br><input id="client-phone"></label><br>
-        <label>Adresse chantier:<br><input id="client-address"></label>
+        <label>Nom / Société:<br><input id="client-name" type="text"></label><br>
+        <label>Email:<br><input id="client-email" type="email"></label><br>
+        <label>Téléphone:<br><input id="client-phone" type="text"></label><br>
+        <label>Adresse chantier:<br><input id="client-address" type="text"></label><br>
       </section>
+
       <section id="sec-prestations">
         <h2>Prestations (lignes)</h2>
         <button onclick="openLine()">Ajouter ligne</button>
@@ -187,35 +76,38 @@
           <thead>
             <tr>
               <th>Prestation</th>
-              <th>Add-ons</th> <!-- ✅ AJOUT -->
+              <th>Add-ons</th>
               <th>Qté</th>
               <th>Unité</th>
               <th>PU</th>
               <th>Min forfait</th>
-              <th>Hors 34-30</th>
+              <th>Hors 34‑30</th>
               <th>HT ligne</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="lignes-body">
-            <!-- lignes JS -->
           </tbody>
         </table>
       </section>
+
       <section id="sec-addons">
         <h2>Add-ons</h2>
         <ul id="global-addons-list">
-          <!-- Liste des add-ons choisis, générée dynamiquement -->
+          <!-- Liste générale des add-ons des lignes -->
         </ul>
       </section>
+
       <section id="sec-deplacement">
         <h2>Déplacement</h2>
         <label><input type="checkbox" id="hors3430"> Hors Hérault/Gard</label>
       </section>
+
       <section id="sec-remise">
         <h2>Remise globale (%)</h2>
         <input type="number" id="remise-global" min="0" max="100" value="0">
       </section>
+
       <section id="sec-envoi">
         <h2>Validation & Envoi</h2>
         <label><input type="checkbox" id="rgpd-ok"> J’accepte l’envoi par email et la conservation locale de mon devis.</label><br>
@@ -224,108 +116,111 @@
       </section>
     </div>
     <div class="col-droite">
-      <div id="resume">
-        <p><strong>Devis N° :</strong> <span id="devis-num"></span></p>
+      <div>
+        <p><strong>Devis N° :</strong> <span id="devis-num">—</span></p>
         <p>Total HT : <span id="total-ht">0.00 €</span></p>
         <p>Remise : <span id="total-remise">0.00 €</span></p>
-        <p>TVA (20 %) : <span id="total-tva">0.00 €</span></p>
+        <p>TVA (20 %) : <span id="total-tva">0.00 €</span></p>
         <p>Total TTC : <span id="total-ttc">0.00 €</span></p>
-        <p>Acompte (30 %) : <span id="total-acompte">0.00 €</span></p>
+        <p>Acompte (30 %) : <span id="total-acompte">0.00 €</span></p>
         <p>Reste dû : <span id="total-reste">0.00 €</span></p>
       </div>
     </div>
   </main>
 
-  <!-- SlideOver -->
   <div id="slideover"></div>
-
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <!-- JS inline -->
   <script>
-    const ls = localStorage;
-    const ID = (id) => document.getElementById(id);
-    const showToast = (msg) => {
-      const t = ID("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
-    };
+    // Persist config de base avec localStorage
+    const STORAGE_KEY = "cdc_devis_data";
+    const STORAGE_CONF = "cdc_devis_conf";
 
-    // --- Modèle de données (simplifié ici, étendu après)
-    let config = {
-      colors: { blue: "#1778F2", orange: "#FF7A00" },
-      tva: 0.20,
-      remisePct: 0,
-      forfaitHors3430: 150,
-      mentionsPdf: "Interventions dépendantes des conditions météo (vent/pluie/températures). En cas d’annulation météo, reprogrammation rapide garantie dès que les conditions sont favorables.",
-      company: {
-        name: "CDC Cleaner Drone Crew",
-        siren: "123 456 789",
-        address: "1 rue du Drone, 34000 Montpellier",
-        email: "contact@cdc.fr",
-        phone: "04 11 22 33 44",
-        iban: "FR76 3000 4000 5000 6000 7000 189",
-        cgvUrl: "https://cdc.fr/cgv"
+    let config = JSON.parse(localStorage.getItem(STORAGE_CONF) || "{}");
+    if (!config.prestations) {
+      // valeurs de base
+      config = {
+        prestations: [
+          { id:"s1", label:"Nettoyage toitures", unite:"€/m²", pu:9.50, min:520, cadence:55, desc:"Démoussage/anti‑lichens, rinçage maîtrisé." },
+          { id:"s2", label:"Façades (softwash)", unite:"€/m²", pu:8.00, min:480, cadence:60, desc:"Solution douce, rinçage basse pression." },
+          { id:"s3", label:"PV – Nettoyage", unite:"€/m²", pu:5.50, min:350, cadence:120, desc:"Eau osmosée (0 ppm), perches, sans additif." },
+          { id:"s4", label:"PV – Thermographie", unite:"€/site", pu:600, min:600, cadence:1, desc:"Inspection IR par drone, rapport synthétique." },
+          { id:"s5", label:"Vitrerie/Bardage", unite:"€/m²", pu:6.00, min:420, cadence:100, desc:"Perches/drones selon accès, essuyage si requis." },
+          { id:"s6", label:"Chéneaux & gouttières", unite:"€/ml", pu:4.00, min:280, cadence:150, desc:"Débouchage, rinçage, contrôle d’écoulement." },
+          { id:"s7", label:"Inspection toiture (photo/vidéo + rapport)", unite:"€/site", pu:420, min:420, cadence:1, desc:"Inspection HD, rapport 48 h." }
+        ],
+        addons: [
+          { id:"a1", label:"Démoussage", pu:50 },
+          { id:"a2", label:"Inspection physique", pu:80 },
+          { id:"a3", label:"Inspection thermique", pu:120 }
+        ],
+        forfaitHors3430:100
+      };
+      localStorage.setItem(STORAGE_CONF, JSON.stringify(config));
+    }
+
+    let devisCounter = parseInt(localStorage.getItem("cdc_devis_counter")||"0", 10);
+
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if (!state.lignes) state = { lignes: [], remisePct:0, hors3430:false, numero:"" };
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(STORAGE_CONF, JSON.stringify(config));
+    }
+
+    function round2(x){ return Math.round((x+1e-8)*100)/100; }
+
+    function generateNum(){
+      if (!state.numero){
+        devisCounter++;
+        localStorage.setItem("cdc_devis_counter", devisCounter);
+        let d = new Date();
+        let y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+        state.numero = `CDC-${y}${m}${dd}-${String(devisCounter).padStart(3,"0")}`;
       }
-    };
-
-    let prestations = [
-      { id:"toitures", label:"Nettoyage toitures", unite:"€/m²", pu:9.5, min:520, cadence:55, desc:"Démoussage/anti-lichens, rinçage maîtrisé." },
-      { id:"facades", label:"Façades (basse pression / softwash)", unite:"€/m²", pu:8.0, min:480, cadence:60, desc:"Solution douce, rinçage basse pression." },
-      { id:"pvnet", label:"PV – Nettoyage", unite:"€/m²", pu:5.5, min:350, cadence:120, desc:"Eau osmosée (0 ppm), perches, sans additif." },
-      { id:"pvthermo", label:"PV – Thermographie", unite:"€/site", pu:600, min:600, cadence:1, desc:"Inspection IR par drone, rapport synthétique." },
-      { id:"vitrerie", label:"Vitrerie/Bardage", unite:"€/m²", pu:6.0, min:420, cadence:100, desc:"Perches/drones selon accès, essuyage si requis." },
-      { id:"chenaux", label:"Chéneaux & gouttières", unite:"€/ml", pu:4.0, min:280, cadence:150, desc:"Débouchage, rinçage, contrôle d’écoulement." },
-      { id:"inspection", label:"Inspection toiture (photo/vidéo + rapport)", unite:"€/site", pu:420, min:420, cadence:1, desc:"Inspection HD, rapport 48 h." }
-    ];
-
-    let addons = [
-      { id:"demoussage", label:"Démoussage", type:"ligne", pu:50 },
-      { id:"inspection_physique", label:"Inspection physique", type:"ligne", pu:80 },
-      { id:"inspection_thermique", label:"Inspection thermique", type:"ligne", pu:120 }
-    ];
-
-    let lignes = []; // ← Ligne de devis (tableau des prestations)
-    function calculerTotalHTLigne(ligne) {
-      const base = Math.max(ligne.qte * ligne.pu, ligne.min);
-      const addonsTotal = ligne.addons.reduce((sum, a) => sum + (a.offert ? 0 : a.pu), 0);
-      return +(base + addonsTotal).toFixed(2);
     }
 
-    function calculerTotaux() {
-      let totalHT = lignes.reduce((sum, l) => sum + calculerTotalHTLigne(l), 0);
-      if (ID("hors3430").checked) totalHT += config.forfaitHors3430;
-
-      const remise = totalHT * (parseFloat(ID("remise-global").value || 0) / 100);
-      const tva = (totalHT - remise) * config.tva;
-      const ttc = totalHT - remise + tva;
-      const acompte = ttc * 0.3;
-      const reste = ttc - acompte;
-
-      ID("total-ht").textContent = totalHT.toFixed(2) + " €";
-      ID("total-remise").textContent = remise.toFixed(2) + " €";
-      ID("total-tva").textContent = tva.toFixed(2) + " €";
-      ID("total-ttc").textContent = ttc.toFixed(2) + " €";
-      ID("total-acompte").textContent = acompte.toFixed(2) + " €";
-      ID("total-reste").textContent = reste.toFixed(2) + " €";
+    function calculHTLigne(l){
+      let base = (l.qte * l.pu) || 0;
+      if (base < l.min) base = l.min;
+      let sumAdd = (l.addons||[]).reduce((acc, ad) => acc + (ad.offert ? 0 : ad.pu), 0);
+      return round2(base + sumAdd);
     }
 
-    function renderLignes() {
-      const tbody = ID("lignes-body");
+    function calculTotaux(){
+      generateNum();
+      let totalHT = state.lignes.reduce((s, l) => s + calculHTLigne(l), 0);
+      if (state.hors3430) totalHT += config.forfaitHors3430;
+      let remise = totalHT * (state.remisePct || 0)/100;
+      let apres = totalHT - remise;
+      let tva = apres * 0.20;
+      let ttc = apres + tva;
+      let acompte = ttc * 0.30;
+      let reste = ttc - acompte;
+
+      ID("devis-num").textContent = state.numero;
+      ID("total-ht").textContent = totalHT.toFixed(2)+" €";
+      ID("total-remise").textContent = remise.toFixed(2)+" €";
+      ID("total-tva").textContent = tva.toFixed(2)+" €";
+      ID("total-ttc").textContent = ttc.toFixed(2)+" €";
+      ID("total-acompte").textContent = acompte.toFixed(2)+" €";
+      ID("total-reste").textContent = reste.toFixed(2)+" €";
+
+      saveState();
+    }
+
+    function renderLignes(){
+      const tbody = document.getElementById("lignes-body");
       tbody.innerHTML = "";
-      lignes.forEach((l, idx) => {
-        const tr = document.createElement("tr");
-
-        const service = prestations.find(p => p.id === l.serviceId);
-        const label = service ? service.label : "N/A";
-
-        const addonsText = l.addons.map(a => {
-          const addon = addons.find(ad => ad.id === a.addonId);
-          return addon ? `${addon.label}${a.offert ? " (offert)" : ""}` : "";
+      state.lignes.forEach((l, i) => {
+        const presta = config.prestations.find(p=>p.id === l.serviceId);
+        const label = presta ? presta.label : "";
+        const addonsText = (l.addons || []).map(ad => {
+          const aConf = config.addons.find(adc => adc.id === ad.addonId);
+          return aConf ? `${aConf.label}${ad.offert ? " (offert)" : ""}` : "";
         }).join(", ");
-
+        const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${label}</td>
           <td>${addonsText}</td>
@@ -334,158 +229,150 @@
           <td>${l.pu.toFixed(2)}</td>
           <td>${l.min.toFixed(2)}</td>
           <td>${l.hors3430 ? "Oui" : "Non"}</td>
-          <td>${calculerTotalHTLigne(l).toFixed(2)}</td>
+          <td>${calculHTLigne(l).toFixed(2)}</td>
           <td>
-            <button onclick="editLigne(${idx})">✏️</button>
-            <button onclick="duplicateLigne(${idx})">📄</button>
-            <button onclick="deleteLigne(${idx})">🗑️</button>
+            <button onclick="editLigne(${i})">✏️</button>
+            <button onclick="duplicateLigne(${i})">📄</button>
+            <button onclick="deleteLigne(${i})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
-
-      renderAddonsGlobal();
-      calculerTotaux();
+      calculTotaux();
     }
 
-    function renderAddonsGlobal() {
-      const ul = ID("global-addons-list");
-      ul.innerHTML = "";
-      lignes.forEach((l, i) => {
-        l.addons.forEach(a => {
-          const addon = addons.find(ad => ad.id === a.addonId);
-          const li = document.createElement("li");
-          li.textContent = `Ligne ${i + 1} – ${addon.label} ${a.offert ? "(offert)" : `(${a.pu} €)`}`;
-          ul.appendChild(li);
-        });
-      });
-    }
+    function ID(id){ return document.getElementById(id); }
 
-    function openLine(idx = null) {
+    function openLine(index = null){
       const slide = ID("slideover");
+      slide.innerHTML = "";
       slide.classList.add("open");
-      slide.innerHTML = ""; // clean
-      const l = idx !== null ? lignes[idx] : null;
-      const serviceOptions = prestations.map(s => `<option value="${s.id}">${s.label}</option>`).join("");
+
+      const l = (index!=null && state.lignes[index]) ? state.lignes[index] : null;
+
+      let options = config.prestations.map(p => `<option value="${p.id}">${p.label}</option>`).join("");
 
       slide.innerHTML = `
-        <h3>${idx === null ? "Nouvelle ligne" : "Modifier ligne"}</h3>
-        <label>Prestation:<br>
-          <select id="s-presta">${serviceOptions}</select>
-        </label><br>
-        <label>Qté:<br><input type="number" id="s-qte"></label><br>
-        <label>Unité:<br><input id="s-unite"></label><br>
-        <label>PU:<br><input type="number" step="0.01" id="s-pu"></label><br>
-        <label>Min forfait:<br><input type="number" step="0.01" id="s-min"></label><br>
-        <label><input type="checkbox" id="s-hors"> Hors 34-30</label><br>
-        <div id="s-addons"></div>
-        <button onclick="validerLigne(${idx})">Valider</button>
+        <h3>${l ? "Modifier ligne" : "Nouvelle ligne"}</h3>
+        <label>Prestation:<br><select id="line-presta">${options}</select></label><br>
+        <label>Qté:<br><input type="number" id="line-qte" value="${l ? l.qte : ''}"></label><br>
+        <label>Unité:<br><input type="text" id="line-unite" value="${l ? l.unite : config.prestations.find(p=>p.id === (l?l.serviceId:config.prestations[0].id)).unite}"></label><br>
+        <label>PU:<br><input type="number" id="line-pu" step="0.01" value="${l ? l.pu : config.prestations.find(p=>p.id === (l?l.serviceId:config.prestations[0].id)).pu}"></label><br>
+        <label>Min forfait:<br><input type="number" id="line-min" step="0.01" value="${l ? l.min : config.prestations.find(p=>p.id === (l?l.serviceId:config.prestations[0].id)).min}"></label><br>
+        <label><input type="checkbox" id="line-hors">${l && l.hors3430 ? 'checked' : ''} Hors 34‑30</label><br>
+        <div id="line-addons-panel"></div>
+        <button onclick="validerLigne(${index})">Valider</button>
         <button onclick="closeSlide()">Annuler</button>
       `;
 
-      ID("s-presta").addEventListener("change", updateAddonsPanel);
-      if (l) {
-        ID("s-presta").value = l.serviceId;
-        ID("s-qte").value = l.qte;
-        ID("s-unite").value = l.unite;
-        ID("s-pu").value = l.pu;
-        ID("s-min").value = l.min;
-        ID("s-hors").checked = l.hors3430;
-      }
-      updateAddonsPanel(l ? l.addons : []);
+      ID("line-presta").addEventListener("change", ()=> renderAddonsInPanel(l));
+
+      renderAddonsInPanel(l);
     }
 
-    function updateAddonsPanel(existingAddons = []) {
-      const container = ID("s-addons");
-      const selectedService = ID("s-presta").value;
-      container.innerHTML = "<p><strong>Add-ons :</strong></p>";
-
-      addons.forEach(addon => {
-        const exists = existingAddons.find(a => a.addonId === addon.id);
-        const checked = exists ? "checked" : "";
-        const offert = exists && exists.offert ? "checked" : "";
-        container.innerHTML += `
-          <label><input type="checkbox" class="addon" data-id="${addon.id}" ${checked}> ${addon.label} (${addon.pu.toFixed(2)} €)</label><br>
-          <label style="margin-left:20px;"><input type="checkbox" class="offert" data-id="${addon.id}" ${offert}> Offert</label><br>
+    function renderAddonsInPanel(ligne){
+      const panel = ID("line-addons-panel");
+      panel.innerHTML = "<p><strong>Add-ons :</strong></p>";
+      config.addons.forEach(ad => {
+        const existing = ligne ? (ligne.addons || []).find(a=>a.addonId === ad.id) : null;
+        const isChecked = existing ? true : false;
+        const isOffert = existing ? existing.offert : false;
+        panel.innerHTML += `
+         <label><input type="checkbox" class="addon-checkbox" data-id="${ad.id}" ${isChecked ? 'checked' : ''}> ${ad.label} (${ad.pu.toFixed(2)} €)</label><br>
+         <label style="margin-left:20px;"><input type="checkbox" class="offert-checkbox" data-id="${ad.id}" ${isOffert ? 'checked' : ''}> Offert</label><br>
         `;
       });
     }
 
-    function validerLigne(idx) {
-      const line = {
-        serviceId: ID("s-presta").value,
-        qte: parseFloat(ID("s-qte").value),
-        unite: ID("s-unite").value,
-        pu: parseFloat(ID("s-pu").value),
-        min: parseFloat(ID("s-min").value),
-        hors3430: ID("s-hors").checked,
-        addons: []
-      };
+    function validerLigne(idx){
+      const serviceId = ID("line-presta").value;
+      const presta = config.prestations.find(p=>p.id===serviceId);
+      const unité = ID("line-unite").value || (presta ? presta.unite : "");
+      const qte = parseFloat(ID("line-qte").value) || 0;
+      const pu = parseFloat(ID("line-pu").value) || (presta ? presta.pu : 0);
+      const min = parseFloat(ID("line-min").value) || (presta ? presta.min : 0);
+      const hors = ID("line-hors").checked;
 
-      document.querySelectorAll(".addon:checked").forEach(chk => {
-        const id = chk.dataset.id;
-        const addon = addons.find(a => a.id === id);
-        const offert = document.querySelector(`.offert[data-id="${id}"]`).checked;
-        line.addons.push({ addonId: id, pu: addon.pu, offert });
+      const addonsSel = [];
+      document.querySelectorAll(".addon-checkbox").forEach(chk => {
+        if (chk.checked){
+          const id = chk.dataset.id;
+          const adconf = config.addons.find(ad=>ad.id===id);
+          const offChk = document.querySelector(`.offert-checkbox[data-id="${id}"]`);
+          const off = offChk && offChk.checked;
+          addonsSel.push({ addonId:id, pu: adconf?p arseFloat(adconf.pu):0, offert: !!off });
+        }
       });
 
-      if (idx !== null) lignes[idx] = line;
-      else lignes.push(line);
+      const ligne = {
+        serviceId: serviceId,
+        qte: qte,
+        unite: unité,
+        pu: pu,
+        min: min,
+        hors3430: hors,
+        addons: addonsSel
+      };
 
+      if (idx != null && state.lignes[idx]) state.lignes[idx] = ligne;
+      else state.lignes.push(ligne);
+      saveState();
       closeSlide();
       renderLignes();
-      showToast("Ligne ajoutée");
     }
 
-    function closeSlide() {
-      ID("slideover").classList.remove("open");
+    function closeSlide(){
+      const slide = ID("slideover");
+      slide.classList.remove("open");
+      slide.innerHTML = ""; // On vide le slide-over pour libérer l’espace
     }
 
-    function deleteLigne(idx) {
-      if (confirm("Supprimer cette ligne ?")) {
-        lignes.splice(idx, 1);
+    function deleteLigne(idx){
+      if (confirm("Supprimer cette ligne ?")){
+        state.lignes.splice(idx,1);
+        saveState();
         renderLignes();
-        showToast("Ligne supprimée");
       }
     }
 
-    function duplicateLigne(idx) {
-      lignes.push(JSON.parse(JSON.stringify(lignes[idx])));
+    function duplicateLigne(idx){
+      const copy = JSON.parse(JSON.stringify(state.lignes[idx]));
+      state.lignes.push(copy);
+      saveState();
       renderLignes();
-      showToast("Ligne dupliquée");
     }
 
-    function editLigne(idx) {
+    function editLigne(idx){
       openLine(idx);
     }
 
-    function newDevis() {
-      lignes = [];
-      ID("remise-global").value = 0;
-      ID("hors3430").checked = false;
-      ID("rgpd-ok").checked = false;
-      renderLignes();
-      showToast("Nouveau devis");
+    function newDevis(){
+      if (confirm("Effacer le devis courant ?")){
+        state = { lignes: [], remisePct:0, hors3430:false, numero:"" };
+        saveState();
+        renderLignes();
+      }
     }
 
-    function telechargerPDF() {
+    function telechargerPDF(){
       window.print();
     }
-
-    function envoyerMail() {
-      if (!ID("rgpd-ok").checked) {
+    function envoyerMail(){
+      if (!ID("rgpd-ok").checked){
         alert("Veuillez accepter la clause RGPD.");
         return;
       }
-      const email = prompt("Email du client ?");
-      const sujet = `Devis CDC — ${new Date().toISOString().slice(0,10)}`;
-      const corps = `Bonjour,\n\nVoici votre devis CDC.\n\nMontant TTC : ${ID("total-ttc").textContent}\n\nCordialement,\nCDC Cleaner Drone Crew`;
-      window.location.href = `mailto:${email}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+      const mail = prompt("Email du client");
+      if (!mail) return;
+      const sujet = `Devis CDC — ${state.numero || ""}`;
+      const corps = `Bonjour,\n\nVoici votre devis. Total TTC : ${ID("total-ttc").textContent}\n\nCordialement,\nCDC Cleaner Drone Crew`;
+      window.location.href = `mailto:${mail}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
     }
 
     window.onload = () => {
       renderLignes();
     };
+
   </script>
 </body>
 </html>
