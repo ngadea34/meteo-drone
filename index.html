@@ -4,13 +4,7 @@
   <meta charset="UTF-8">
   <title>CDC – Calculateur de devis</title>
   <style>
-    :root {
-      --bleu: #1778F2;
-      --orange: #FF7A00;
-      --gris-clair: #f2f2f2;
-      --texte: #333;
-      --fond: #fff;
-    }
+    :root { --bleu: #1778F2; --orange: #FF7A00; --gris-clair: #f2f2f2; --texte: #333; --fond: #fff; }
     body { margin:0; padding:0; font-family:sans-serif; color: var(--texte); background: var(--fond); }
     header { position:fixed; top:0; left:0; right:0; background: var(--bleu); color:#fff; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; z-index:1000; }
     header .logo { font-size:1.5em; font-weight:bold; }
@@ -65,7 +59,7 @@
   </header>
   <main>
     <div class="col-gauche">
-      <!-- Section Client -->
+      <!-- Client -->
       <section id="sec-client">
         <h2>Client</h2>
         <div class="content">
@@ -197,7 +191,7 @@
   <div id="toaster"></div>
 
   <script>
-    // ‒ Modèles & persistance
+    // Modèles & persistance
     const DEFAULT_SERVICES = [
       {id:"s1",label:"Nettoyage toitures",unite:"m²",pu:9.50,min:520,cadence:55,desc:"Démoussage/anti‑lichens, rinçage maîtrisé."},
       {id:"s2",label:"Façades (softwash)",unite:"m²",pu:8.00,min:480,cadence:60,desc:"Solution douce, rinçage basse pression."},
@@ -205,7 +199,7 @@
       {id:"s4",label:"PV – Thermographie",unite:"site",pu:600,min:600,cadence:1,desc:"Inspection IR par drone, rapport synthétique."},
       {id:"s5",label:"Vitrerie/Bardage",unite:"m²",pu:6.00,min:420,cadence:100,desc:"Perches/drones selon accès, essuyage si requis."},
       {id:"s6",label:"Chéneaux & gouttières",unite:"ml",pu:4.00,min:280,cadence:150,desc:"Débouchage, rinçage, contrôle d’écoulement."},
-      {id:"s7",label:"Inspection toiture (photo/vidéo + rapport)",unite:"site",pu:420,min:420,cadence:1,desc:"Inspection HD, rapport 48 h."}
+      {id:"s7",label:"Inspection toiture (photo/vidéo + rapport)",unite:"site",pu:420,min:420,cadence:1,desc:"Inspection HD, rapport 48 h."}
     ];
     const DEFAULT_ADDONS = [
       {id:"a1",label:"Démoussage",type:"ligne",pu:50,appliesTo:["nettoyage"]},
@@ -221,8 +215,8 @@
 
     let services, addons, config, devis, devisCounter;
 
-    function lsGet(k, d){ let v=localStorage.getItem(k); return v?JSON.parse(v):d; }
-    function lsSet(k, v){ localStorage.setItem(k,JSON.stringify(v)); }
+    function lsGet(k,d){ let v=localStorage.getItem(k); return v?JSON.parse(v):d; }
+    function lsSet(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
     function initModels(){
       services = lsGet("cdc_services", DEFAULT_SERVICES);
@@ -241,7 +235,7 @@
     function genNumero(){
       if (!devis.numero){
         let d = new Date();
-        let yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+        let yyyy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0");
         devisCounter++;
         localStorage.setItem("cdc_devis_counter",devisCounter);
         devis.numero = `CDC-${yyyy}${mm}${dd}-${String(devisCounter).padStart(3,"0")}`;
@@ -278,11 +272,40 @@
       devis.resteDu = round2(ttc - devis.acompte);
     }
 
-    function renderSections(){
-      ["sec-client","sec-prestations","sec-addons","sec-deplacement","sec-remise","sec-validation"].forEach(id=>{
-        let sec = document.getElementById(id);
-        let h = sec.querySelector("h2");
-        h.onclick = ()=> sec.classList.toggle("open");
+    function renderGlobalAddons() {
+      let gl = document.getElementById("global-addons-list");
+      gl.innerHTML = "";
+      addons.forEach(ad=>{
+        let div = document.createElement("div");
+        let cb = document.createElement("input");
+        cb.type="checkbox"; cb.id = "globcb_"+ad.id;
+        // état global ? on pourrait définir un attribut “globale” dans ad (ici simplifié : pas global/offert globalement)
+        // Pour l'instant global checkbox active ou désactive cet add-on pour *toutes* les lignes automatiquement
+        cb.checked = ad.globalActive || false;
+        let lbl = document.createElement("label");
+        lbl.textContent = `${ad.label} (${ad.pu.toFixed(2)} €)`;
+        lbl.prepend(cb);
+        div.append(lbl);
+        // bouton offert global
+        let off = document.createElement("input");
+        off.type="checkbox"; off.id="globoff_"+ad.id;
+        off.checked = ad.globalOffert || false;
+        let loff = document.createElement("label");
+        loff.textContent = " Offert";
+        loff.prepend(off);
+        div.append(loff);
+        gl.append(div);
+
+        cb.onchange = ()=>{
+          ad.globalActive = cb.checked;
+          saveModels();
+          refresh();
+        };
+        off.onchange = ()=>{
+          ad.globalOffert = off.checked;
+          saveModels();
+          refresh();
+        };
       });
     }
 
@@ -297,13 +320,12 @@
       });
     }
 
-    function renderAddonsForLine(line){
+    function renderAddonsForLine(line) {
       let container = document.getElementById("addons-for-line");
       container.innerHTML = "";
       let serviceId = line ? line.serviceId : document.getElementById("line-service").value;
-      let s = services.find(sv=>sv.id === serviceId);
+      let s = services.find(sv=>sv.id===serviceId);
       addons.forEach(ad=>{
-        // Vérifier applicabilité
         let appl = ad.appliesTo || ["all"];
         let ok = appl.includes("all") ||
           (s && appl.includes("nettoyage") && s.label.toLowerCase().includes("nettoyage")) ||
@@ -311,8 +333,11 @@
           (s && appl.includes("facade") && s.label.toLowerCase().includes("façade")) ||
           (s && appl.includes("toiture") && s.label.toLowerCase().includes("toiture"));
         if (!ok) return;
-        let cb = document.createElement("input");
-        cb.type = "checkbox"; cb.id = "adcb_"+ad.id;
+        // Global state
+        let globalActive = ad.globalActive || false;
+        let globalOffert = ad.globalOffert || false;
+
+        // Ligne‑local state
         let checked = false, offert = false;
         if (line){
           let la = line.addons.find(x=>x.addonId === ad.id);
@@ -321,23 +346,31 @@
             offert = la.offert;
           }
         }
+
+        // If globalActive, pre‑check
+        if (!checked && globalActive) checked = true;
+        if (!offert && globalOffert) offert = true;
+
+        let cb = document.createElement("input");
+        cb.type="checkbox"; cb.id = "adcb_"+ad.id;
         cb.checked = checked;
         let lbl = document.createElement("label");
         lbl.textContent = `${ad.label} (${ad.pu.toFixed(2)} €)`;
         lbl.prepend(cb);
         let off = document.createElement("input");
-        off.type = "checkbox"; off.id = "adoff_"+ad.id;
+        off.type="checkbox"; off.id = "adoff_"+ad.id;
         off.checked = offert;
         let loff = document.createElement("label");
         loff.textContent = " Offert";
         loff.prepend(off);
+
         container.append(lbl);
         container.append(loff);
         container.append(document.createElement("br"));
       });
     }
 
-    function renderLines(){
+    function renderLines() {
       let tbody = document.querySelector("#table-lignes tbody");
       tbody.innerHTML = "";
       devis.lignes.forEach(l=>{
@@ -348,41 +381,67 @@
         td0.classList.add("tooltip");
         td0.setAttribute("data-desc", s ? s.desc : "");
         tr.append(td0);
+
         let td1 = document.createElement("td");
         td1.textContent = l.qte;
         tr.append(td1);
+
         let td2 = document.createElement("td");
         td2.textContent = l.unite;
         tr.append(td2);
+
         let td3 = document.createElement("td");
         td3.textContent = (l.pu||0).toFixed(2);
         tr.append(td3);
+
         let td4 = document.createElement("td");
         td4.textContent = (l.min||0).toFixed(2);
         tr.append(td4);
+
         let td5 = document.createElement("td");
         td5.textContent = l.hors3430 ? "Oui":"Non";
         tr.append(td5);
+
+        // HT ligne avec add-ons inclus
         let td6 = document.createElement("td");
         td6.textContent = (l._ht||0).toFixed(2);
         tr.append(td6);
-        let td7 = document.createElement("td");
+
+        // Afficher dans la ligne le(s) add-ons offerts ou non dans colonne à part ou avec mention
+        // Ici on ajoute une colonne "Add‑ons" juste après Prestation
+        let tdAdd = document.createElement("td");
+        // On pourra montrer les add-ons sélectionnés
+        let texts = [];
+        l.addons.forEach(adl=>{
+          let ad = addons.find(a=>a.id===adl.addonId);
+          if (ad){
+            if (adl.offert) texts.push(ad.label + " (offert)");
+            else texts.push(ad.label);
+          }
+        });
+        tdAdd.textContent = texts.join(", ");
+        tr.insertBefore(tdAdd, tr.children[1]); // insérer après prestation
+        // Ajuster colonnes d'en‑tête si besoin
+
+        let tdA = document.createElement("td");
         let btnE = document.createElement("button"); btnE.textContent="✏️"; btnE.classList.add("btn-small");
         btnE.onclick = ()=> openLine(l.id);
-        td7.append(btnE);
+        tdA.append(btnE);
         let btnDup = document.createElement("button"); btnDup.textContent="📄"; btnDup.classList.add("btn-small");
-        btnDup.onclick = ()=> { duplicateLine(l.id); };
-        td7.append(btnDup);
+        btnDup.onclick = ()=> duplicateLine(l.id);
+        tdA.append(btnDup);
         let btnDel = document.createElement("button"); btnDel.textContent="🗑"; btnDel.classList.add("btn-small");
-        btnDel.onclick = ()=> { deleteLine(l.id); };
-        td7.append(btnDel);
-        tr.append(td7);
+        btnDel.onclick = ()=> deleteLine(l.id);
+        tdA.append(btnDel);
+        tr.append(tdA);
+
         tbody.append(tr);
       });
     }
 
     function refresh(){
       genNumero();
+      renderGlobalAddons();
       renderServiceOpts();
       calc();
       renderLines();
@@ -401,6 +460,7 @@
       document.getElementById("footer-deplacement").style.display = devis.hors3430 ? "block":"none";
     }
 
+    // Ajouter / éditer ligne
     function openLine(id){
       let panel = document.getElementById("panel-line");
       panel.classList.add("open");
@@ -464,6 +524,16 @@
           if (cb.checked){
             let offert = (document.getElementById("adoff_"+ad.id) && document.getElementById("adoff_"+ad.id).checked) ? true : false;
             lineAddons.push({ addonId: ad.id, offert: offert, pu: ad.pu });
+          }
+        }
+      });
+      // aussi appliquer les add-ons globaux si globalActive
+      addons.forEach(ad=>{
+        if (ad.globalActive){
+          // vérifier s’il est déjà dans lineAddons
+          if (!lineAddons.find(x=>x.addonId===ad.id)){
+            let off = ad.globalOffert || false;
+            lineAddons.push({ addonId: ad.id, offert: off, pu: ad.pu });
           }
         }
       });
@@ -532,14 +602,11 @@
       }
     };
 
-    // Onglets admin
     document.querySelectorAll(".tabs button").forEach(btn=>{
       btn.onclick = function(){
         let tab = this.getAttribute("data-tab");
-        // boutons
         document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
         this.classList.add("active");
-        // contenus
         document.querySelectorAll(".tab-content").forEach(tc=>tc.classList.remove("active"));
         let tc = document.getElementById("tab-"+tab);
         if (tc) tc.classList.add("active");
@@ -558,8 +625,7 @@
         btn.onclick = ()=>{
           let np = prompt("Nouveau PU pour "+s.label, s.pu);
           if (np!==null){
-            s.pu = parseFloat(np);
-            if (isNaN(s.pu)) s.pu = DEFAULT_SERVICES.find(ds=>ds.id===s.id).pu;
+            s.pu = parseFloat(np) || s.pu;
             lsSet("cdc_services", services);
             refresh();
           }
@@ -567,7 +633,7 @@
         d.append(btn);
         ap.append(d);
       });
-      // Add‑ons
+      // Add‑ons dans Admin
       let aa = document.getElementById("admin-addons");
       aa.innerHTML = "";
       addons.forEach(ad=>{
@@ -578,8 +644,7 @@
         btn.onclick = ()=>{
           let np = prompt("PU add‑on "+ad.label, ad.pu);
           if (np!==null){
-            ad.pu = parseFloat(np);
-            if (isNaN(ad.pu)) ad.pu = DEFAULT_ADDONS.find(da=>da.id===ad.id).pu;
+            ad.pu = parseFloat(np) || ad.pu;
             lsSet("cdc_addons", addons);
             refresh();
           }
@@ -595,7 +660,7 @@
         lsSet("cdc_config", config);
         refresh();
       };
-      // Mentions PDF
+      // Mentions
       let im = document.getElementById("admin-mentions");
       im.value = config.mentionsPdf;
       im.onchange = e=>{
@@ -624,27 +689,6 @@
       co.value = config.colors.orange;
       co.onchange = e=>{ config.colors.orange = e.target.value; document.documentElement.style.setProperty("--orange", e.target.value); lsSet("cdc_config", config); };
     }
-
-    document.getElementById("btn-restore-defaults").onclick = function(){
-      if (confirm("Restaurer configuration par défaut ?")){
-        localStorage.removeItem("cdc_services");
-        localStorage.removeItem("cdc_addons");
-        localStorage.removeItem("cdc_config");
-        initModels();
-        refresh();
-        showToast("Configuration restaurée");
-      }
-    };
-    document.getElementById("btn-load-tests").onclick = function(){
-      if (confirm("Charger cas tests (écrasera devis actuel) ?")){
-        devis.lignes = [
-          {id:"t1",serviceId:"s1",qte:200,unite:services.find(s=>s.id==="s1").unite,pu:services.find(s=>s.id==="s1").pu,min:services.find(s=>s.id==="s1").min,hors3430:false,addons:[]},
-          {id:"t2",serviceId:"s4",qte:800,unite:services.find(s=>s.id==="s4").unite,pu:services.find(s=>s.id==="s4").pu,min:services.find(s=>s.id==="s4").min,hors3430:false,addons:[]}
-        ];
-        refresh();
-        showToast("Tests chargés");
-      }
-    };
 
     function showToast(m){
       let t = document.getElementById("toaster");
