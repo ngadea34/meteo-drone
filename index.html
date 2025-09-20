@@ -1,389 +1,652 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CDC — Calculateur de devis</title>
-<style>
-  :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--pri:#2563eb;--ok:#16a34a;--warn:#ea580c;--border:#e5e7eb}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-  header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:20px 24px}
-  header h1{font-size:20px;margin:0}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 16px 32px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media (max-width:980px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
-  .card h2{margin:0;padding:16px 16px 8px;font-size:18px}
-  .card .sub{color:var(--muted);padding:0 16px 12px}
-  .card .content{padding:16px}
-  label{display:block;font-weight:600;margin-bottom:6px}
-  input[type="number"], input[type="text"], select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-  .row4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
-  .opt{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
-  .muted{color:var(--muted)}
-  .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:2px 10px;font-size:12px}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
-  .btn.primary{background:var(--pri);color:#fff;border-color:var(--pri)}
-  .btn.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
-  .stack{display:flex;gap:8px;flex-wrap:wrap}
-  .total{font-size:22px;font-weight:800}
-  .table{width:100%;border-collapse:collapse}
-  .table th,.table td{padding:8px 6px;border-bottom:1px dashed var(--border);text-align:right}
-  .table th:first-child,.table td:first-child{text-align:left}
-  .hl{background:#f3f4f6;border-radius:12px;padding:10px}
-  footer{padding:16px;color:var(--muted);text-align:center}
-  /* Print */
-  @media print{
-    header,.noprint{display:none}
-    body{background:#fff}
-    .wrap{max-width:100%;padding:0}
-    .grid{grid-template-columns:1fr 1fr}
-    .card{box-shadow:none;border:1px solid #ddd}
-  }
-</style>
-</head>
+  <meta charset="UTF-8">
+  <title>CDC – Calculateur de devis</title>
+  <style>
+    :root {
+      --bleu: #1778F2;
+      --orange: #FF7A00;
+      --gris-clair: #f2f2f2;
+      --texte: #333;
+      --fond: #fff;
+    }
+    body {
+      margin:0; padding:0;
+      font-family:sans-serif;
+      color: var(--texte);
+      background: var(--fond);
+    }
+    header {
+      position:fixed; top:0; left:0; right:0;
+      background: var(--bleu);
+      color:#fff;
+      padding:10px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      z-index:1000;
+    }
+    header .logo { font-size:1.5em; font-weight:bold; }
+    header .coords { font-size:0.9em; }
+    header button {
+      margin-left:10px; padding:6px 12px;
+      border:none; background: var(--orange);
+      color:#fff; cursor:pointer;
+    }
+    main {
+      display:flex;
+      margin-top:80px;
+      padding:20px;
+    }
+    .col-gauche { flex:2; padding-right:20px; }
+    .col-droite {
+      flex:1; border-left:1px solid #ccc;
+      padding-left:20px;
+      position:sticky; top:80px;
+      height: calc(100vh - 100px);
+      overflow:auto;
+    }
+    section {
+      margin-bottom:15px;
+      border:1px solid #ccc;
+      border-radius:4px;
+    }
+    section h2 {
+      margin:0; padding:10px;
+      background: var(--gris-clair);
+      cursor:pointer;
+    }
+    section .content {
+      padding:10px; display:none;
+    }
+    section.open .content { display:block; }
+    label { display:block; margin-bottom:8px; }
+    input[type="text"], input[type="number"], input[type="email"], select, textarea {
+      width:100%; padding:4px; box-sizing:border-box;
+      border:1px solid #aaa; border-radius:3px;
+    }
+    table {
+      width:100%; border-collapse:collapse; font-size:0.9em;
+    }
+    th, td {
+      border:1px solid #aaa; padding:6px;
+    }
+    th { background: var(--gris-clair); }
+    .btn-small {
+      padding:4px 8px; font-size:0.8em; cursor:pointer;
+      margin-left:2px;
+    }
+    .tooltip { position:relative; }
+    .tooltip:hover::after {
+      content: attr(data-desc);
+      position:absolute; left:0; top:100%;
+      background:#222; color:#fff; padding:4px 8px;
+      font-size:0.8em; white-space:nowrap; z-index:100;
+      border-radius:3px;
+    }
+    .slide-over {
+      position:fixed; top:0; right:-100%;
+      width:360px; max-width:90%; height:100%;
+      background:#fff; box-shadow:-2px 0 5px rgba(0,0,0,0.3);
+      transition:right 0.3s;
+      padding:20px; overflow-y:auto; z-index:2000;
+    }
+    .slide-over.open { right:0; }
+    .totaux div { margin-bottom:8px; }
+    .alerte-vent {
+      background:#ffcccc; color:#900;
+      padding:10px; margin-bottom:10px;
+      border:1px solid #900; display:none;
+    }
+    .modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5);
+      display:none; align-items:center; justify-content:center;
+      z-index:3000;
+    }
+    .modal.open { display:flex; }
+    .modal .dialog {
+      background:#fff; padding:20px;
+      max-width:700px; width:100%; max-height:90%;
+      overflow-y:auto; border-radius:5px;
+    }
+    .tabs { display:flex; border-bottom:1px solid #ccc; }
+    .tabs button {
+      padding:8px 12px; border:none; background:none; cursor:pointer;
+    }
+    .tabs button.active {
+      border-bottom:2px solid var(--bleu); font-weight:bold;
+    }
+    .tab-content { display:none; padding-top:10px; }
+    .tab-content.active { display:block; }
+    #toaster {
+      position:fixed; bottom:20px; right:20px;
+      background:#333; color:#fff;
+      padding:10px 15px; border-radius:4px;
+      opacity:0; transition:opacity 0.5s;
+      z-index:4000;
+    }
+    #toaster.show { opacity:1; }
+    .error { border-color:red; }
+    @media print {
+      header button, header .coords, .slide-over, .modal, .tabs,
+      section h2, section .content input, section .content select,
+      .btn-small { display:none !important; }
+      header { position:static; }
+      body { margin:0; padding:15mm; }
+      main { display:block; }
+      table, th, td { border:1px solid #000; }
+    }
+  </style>
 <body>
-<header>
-  <h1>CDC — Calculateur de devis</h1>
-  <div class="stack noprint">
-    <button class="btn" id="resetBtn">Réinitialiser</button>
-    <button class="btn primary" onclick="window.print()">Exporter / Imprimer</button>
-  </div>
-</header>
-<div class="wrap">
-  <div class="grid">
-    <section class="card">
-      <h2>Paramètres</h2>
-      <div class="sub">Prototype mono‑fichier — Remplir les barèmes depuis « cdc version 2.pdf » (voir objet PRICING dans le code).</div>
-      <div class="content">
-        <div class="row">
-          <div>
-            <label for="service">Prestation</label>
-            <select id="service"></select>
-          </div>
-          <div>
-            <label for="qty">Quantité (<span id="qtyUnit">m²</span>)</label>
-            <input id="qty" type="number" min="0" step="1" value="100" />
-          </div>
-        </div>
-
-        <div id="dims"></div>
-
-        <div class="row" style="margin-top:8px">
-          <div>
-            <label for="zone">Zone</label>
-            <select id="zone">
-              <option value="Z1">Z1 (intra)</option>
-              <option value="Z2">Z2 (proche)</option>
-              <option value="Z3">Z3 (élargi)</option>
-            </select>
-          </div>
-          <div>
-            <label for="km">Kilométrage total <span class="muted">(<span id="kmIncl">0</span> km inclus)</span></label>
-            <input id="km" type="number" min="0" step="1" value="10" />
-          </div>
-        </div>
-
-        <div style="margin-top:12px">
-          <label>Options</label>
-          <div id="options" class="row"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Résultat</h2>
-      <div class="content">
-        <table class="table">
-          <tbody>
-            <tr><td>Service (HT)</td><td id="serviceHT">—</td></tr>
-            <tr><td>Déplacement (HT)</td><td id="depHT">—</td></tr>
-            <tr><td>Options (HT)</td><td id="optHT">—</td></tr>
-            <tr><td>Coefficient (urgence / nuit)</td><td id="coef">× 1.00</td></tr>
-            <tr><th>Total HT</th><th id="totalHT">—</th></tr>
-            <tr><td>TVA (<span id="tvaRate">20</span>%)</td><td id="tva">—</td></tr>
-            <tr><th>Total TTC</th><th id="totalTTC" class="total">—</th></tr>
-          </tbody>
-        </table>
-
-        <div class="hl" style="margin-top:12px">
-          <b>Durée estimée</b> : ≈ <span id="dureeH">—</span> h — cadence <span id="cadence">—</span>
-          <div class="muted" style="font-size:12px;margin-top:4px">Estimation indicative. Sous réserve d'accès, sécurité, rinçages, tests pH/RA, météo et autorisations.</div>
-        </div>
-
-        <div style="margin-top:12px">
-          <details>
-            <summary><b>Détail calcul</b></summary>
-            <div id="detail" style="margin-top:8px;font-size:13px"></div>
-          </details>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <section class="card" style="margin-top:16px">
-    <h2>Mentions</h2>
-    <div class="content muted" style="font-size:12px">
-      Devis généré à titre indicatif. Validité 30 jours. Conditions particulières : sécurité sur site (éventuel parachute/FTS),
-      gestion des effluents (capture, filtration, pH/RA), contraintes météorologiques (vent/pluie/températures), autorisations locales.
+  <header>
+    <div class="logo">CDC Cleaner Drone Crew</div>
+    <div class="coords">Adresse • Email • Téléphone</div>
+    <div>
+      <button id="btn-new">Nouveau devis</button>
+      <button id="btn-admin">Admin</button>
+      <button id="btn-print">Imprimer / Télécharger PDF</button>
     </div>
-  </section>
-</div>
-<footer class="noprint">CDC — Prototype v1 HTML autonome</footer>
+  </header>
+  <main>
+    <div class="col-gauche">
+      <div class="alerte-vent" id="alerteVent"></div>
 
-<script>
-// ====== BARÈME — À RENSEIGNER DEPUIS « cdc version 2.pdf » ======
-const PRICING = {
-  tva: 0.20,
-  deplacement: {
-    forfaitZone: { Z1: 0, Z2: 45, Z3: 90 },
-    coutKm: 0.85,
-    inclusKmParZone: { Z1: 20, Z2: 40, Z3: 60 }
-  },
-  services: {
-    facadesHP: {
-      label: "Nettoyage façades (haute pression)", unite: "€/m²",
-      base: 6.5, minForfait: 450, cadence: 80,
-      coefficients: { hauteur: {"<10m":1, "10–20m":1.15, ">20m":1.30}, complexite:{simple:1,moyenne:1.15,complexe:1.30} }
-    },
-    facadesLP: {
-      label: "Nettoyage façades (basse pression/softwash)", unite: "€/m²",
-      base: 8.0, minForfait: 480, cadence: 60,
-      coefficients: { hauteur: {"<10m":1, "10–20m":1.15, ">20m":1.25}, complexite:{simple:1,moyenne:1.15,complexe:1.25} }
-    },
-    demoussageToiture: {
-      label: "Démoussage toiture (tether + mousse)", unite: "€/m²",
-      base: 9.5, minForfait: 520, cadence: 55,
-      coefficients: { pente: {"<30°":1, "30–45°":1.15, ">45°":1.30}, complexite:{simple:1,noue:1.15,fragile:1.25} }
-    },
-    pvNettoyage: {
-      label: "Nettoyage panneaux PV", unite: "€/m²",
-      base: 5.5, minForfait: 350, cadence: 120,
-      coefficients: { encrassement: { faible:1, moyen:1.10, fort:1.25 } }
-    },
-    pvThermographie: {
-      label: "Thermographie PV (drone)", unite: "€/kWc",
-      base: 1.2, minForfait: 600, cadence: 500,
-      coefficients: { format: { toiture:1.10, ombrieres:1, sol:0.90 } }
-    },
-    inspectionToiture: {
-      label: "Inspection toiture (photos/rapport)", unite: "€/site",
-      base: 420, minForfait: 420, cadence: 1,
-      coefficients: { complexite: { simple:1, moyenne:1.15, complexe:1.30 } }
+      <!-- Météo & Mission -->
+      <section id="sec-meteo">
+        <h2>Type de mission & météo</h2>
+        <div class="content">
+          <label>Type de mission:
+            <select id="missionType">
+              <option value="nettoyage">Nettoyage façades/toitures</option>
+              <option value="pv-nettoyage">Nettoyage PV</option>
+              <option value="inspection">Inspection</option>
+              <option value="thermoPv">Thermo PV</option>
+            </select>
+          </label>
+          <label>Vitesse du vent (km/h):
+            <input type="number" id="vent" min="0" />
+          </label>
+        </div>
+      </section>
+
+      <section id="sec-client">
+        <h2>Client</h2>
+        <div class="content">
+          <label>Nom / Société:<input type="text" id="client-name" /></label>
+          <label>Email:<input type="email" id="client-email" /></label>
+          <label>Téléphone:<input type="text" id="client-phone" /></label>
+          <label>Adresse chantier:<input type="text" id="client-address" /></label>
+        </div>
+      </section>
+
+      <section id="sec-prestations">
+        <h2>Prestations (lignes)</h2>
+        <div class="content">
+          <button id="btn-add-line">Ajouter ligne</button>
+          <table id="table-lignes"><thead>
+            <tr><th>Prestation</th><th>Qté</th><th>Unité</th><th>PU</th><th>Min forfait</th><th>Hors 34‑30</th><th>HT ligne</th><th>Actions</th></tr>
+          </thead><tbody></tbody></table>
+        </div>
+      </section>
+
+      <section id="sec-addons">
+        <h2>Add‑ons</h2>
+        <div class="content">
+          <div id="global-addons-list"></div>
+        </div>
+      </section>
+
+      <section id="sec-deplacement">
+        <h2>Déplacement</h2>
+        <div class="content">
+          <label><input type="checkbox" id="chk-hors3430" /> Hors Hérault/Gard</label>
+        </div>
+      </section>
+
+      <section id="sec-remise">
+        <h2>Remise globale (%)</h2>
+        <div class="content">
+          <input type="number" id="remisePct" min="0" max="100" value="0" />
+        </div>
+      </section>
+
+      <section id="sec-validation">
+        <h2>Validation & Envoi</h2>
+        <div class="content">
+          <label><input type="checkbox" id="rgpd" /> J’accepte l’envoi par email et la conservation locale de mon devis.</label>
+          <button id="btn-download">Télécharger PDF</button>
+          <button id="btn-email">Envoyer par email</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-droite">
+      <div class="totaux">
+        <div>Devis N° : <span id="devis-numero">—</span></div>
+        <div>Total HT : <span id="totalHT">0.00 €</span></div>
+        <div>Remise : <span id="remise-val">0.00 €</span></div>
+        <div>TVA (20 %) : <span id="tva-val">0.00 €</span></div>
+        <div>Total TTC : <span id="totalTTC">0.00 €</span></div>
+        <div>Acompte (30 %) : <span id="acompte">0.00 €</span></div>
+        <div>Reste dû : <span id="reste">0.00 €</span></div>
+        <div id="footer-deplacement" style="font-size:0.9em; margin-top:10px; display:none;">
+          Forfait déplacement hors 34‑30 inclus au Total HT
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="slide-over" id="panel-line">
+    <h3 id="panel-title">Nouvelle ligne</h3>
+    <form id="form-line">
+      <label>Prestation:
+        <select id="line-service"></select>
+      </label>
+      <label>Qté:<input type="number" id="line-qte" min="0" step="any" /></label>
+      <label>Unité:<input type="text" id="line-unite" /></label>
+      <label>PU:<input type="number" id="line-pu" min="0" step="any" /></label>
+      <label>Min forfait:<input type="number" id="line-min" min="0" step="any" /></label>
+      <label>Hors 34‑30:<input type="checkbox" id="line-hors3430" /></label>
+      <div id="addons-for-line"></div>
+      <button type="submit">Valider</button>
+      <button type="button" id="btn-cancel-line">Annuler</button>
+    </form>
+  </div>
+
+  <div class="modal" id="modal-admin">
+    <div class="dialog">
+      <h2>Admin</h2>
+      <label>Mot de passe:<input type="password" id="admin-pass" /></label>
+      <button id="btn-admin-login">Se connecter</button>
+      <button id="btn-admin-cancel">Annuler</button>
+      <div id="admin-content">
+        <div class="tabs">
+          <button data-tab="prestations" class="active">Prestations</button>
+          <button data-tab="addons">Add‑ons</button>
+          <button data-tab="deplacement">Déplacement</button>
+          <button data-tab="meteo">Météo</button>
+          <button data-tab="mentions">Mentions PDF</button>
+          <button data-tab="identite">Identité</button>
+          <button data-tab="maintenance">Maintenance</button>
+        </div>
+        <div class="tab-content active" id="tab-prestations"><div id="admin-prestations"></div></div>
+        <div class="tab-content" id="tab-addons"><div id="admin-addons"></div></div>
+        <div class="tab-content" id="tab-deplacement">
+          <label>Forfait Hors 34‑30:<input type="number" id="admin-forfait-h3430" min="0" step="any" /></label>
+        </div>
+        <div class="tab-content" id="tab-meteo"><div id="admin-seuils"></div></div>
+        <div class="tab-content" id="tab-mentions">
+          <textarea id="admin-mentions" rows="4" style="width:100%"></textarea>
+        </div>
+        <div class="tab-content" id="tab-identite">
+          <label>Société/Nom:<input type="text" id="admin-company-name" /></label>
+          <label>SIREN:<input type="text" id="admin-company-siren" /></label>
+          <label>Adresse:<input type="text" id="admin-company-address" /></label>
+          <label>Email:<input type="email" id="admin-company-email" /></label>
+          <label>Téléphone:<input type="text" id="admin-company-phone" /></label>
+          <label>IBAN:<input type="text" id="admin-company-iban" /></label>
+          <label>URL CGV:<input type="text" id="admin-company-cgvUrl" /></label>
+          <label>Couleur bleu:<input type="color" id="admin-color-bleu" value="#1778F2" /></label>
+          <label>Couleur orange:<input type="color" id="admin-color-orange" value="#FF7A00" /></label>
+        </div>
+        <div class="tab-content" id="tab-maintenance">
+          <button id="btn-restore-defaults">Restaurer défauts</button>
+          <button id="btn-load-tests">Charger tests</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toaster"></div>
+
+  <script>
+    // --- Modèles & persistance
+    const DEFAULT_SERVICES = [
+      {id:"s1",label:"Nettoyage toitures",unite:"m²",pu:9.50,min:520,cadence:55,desc:"Démoussage/anti‑lichens, rinçage maîtrisé."},
+      {id:"s2",label:"Façades (softwash)",unite:"m²",pu:8.00,min:480,cadence:60,desc:"Solution douce, rinçage basse pression."},
+      {id:"s3",label:"PV – Nettoyage",unite:"m²",pu:5.50,min:350,cadence:120,desc:"Eau osmosée, perches, sans additif."},
+      {id:"s4",label:"PV – Thermographie",unite:"site",pu:600,min:600,cadence:1,desc:"Inspection IR par drone, rapport synthétique."},
+      {id:"s5",label:"Vitrerie/Bardage",unite:"m²",pu:6.00,min:420,cadence:100,desc:"Perches/drones selon accès, essuyage si requis."},
+      {id:"s6",label:"Chéneaux & gouttières",unite:"ml",pu:4.00,min:280,cadence:150,desc:"Débouchage, rinçage, contrôle d’écoulement."},
+      {id:"s7",label:"Inspection toiture (photo/vidéo + rapport)",unite:"site",pu:420,min:420,cadence:1,desc:"Inspection HD, rapport 48 h."}
+    ];
+    const DEFAULT_ADDONS = [
+      {id:"a1",label:"Démoussage",type:"ligne",pu:50,appliesTo:["nettoyage"]},
+      {id:"a2",label:"Inspection physique",type:"ligne",pu:80,appliesTo:["all"]},
+      {id:"a3",label:"Inspection thermique",type:"ligne",pu:120,appliesTo:["all","pv"]}
+    ];
+    const DEFAULT_CONFIG = {
+      colors:{blue:"#1778F2",orange:"#FF7A00"},
+      tva:20, remisePct:0, forfaitHors3430:100,
+      seuilsVent:{thermoPv:20,inspection:30,pv:25,nettoyages:35},
+      motifsVent:{
+        thermoPv:"Thermo PV sensible au vent.",inspection:"Sécurité : vent trop fort.",
+        pv:"Nettoyage PV non recommandé par vent fort.",
+        nettoyages:"Opérations extérieures difficiles par vent."
+      },
+      mentionsPdf:"Interventions dépendantes des conditions météo (...). En cas d’annulation météo, reprogrammation rapide garantie.",
+      company:{name:"CDC Cleaner Drone Crew",siren:"123456789",address:"Adresse société",email:"contact@cdc.com",phone:"0000000000",iban:"FR76...",cgvUrl:"https://cdc.example.com/cgv"}
+    };
+
+    let services, addons, config, devis;
+    let devisCounter;
+
+    function lsGet(key, def) {
+      let v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : def;
     }
-  },
-  options: {
-    eauChaude: { label: "Eau chaude", type: "flat", prix: 90 },
-    eauOsmosee: { label: "Eau osmosée/RO", type: "flat", prix: 45 },
-    captureEffluents: { label: "Capture & filtration effluents", type: "flat", prix: 120 },
-    traitementRA: { label: "Traitement pH/RA local", type: "flat", prix: 65 },
-    nacelle: { label: "Location nacelle", type: "jour", prix: 280 },
-    secondOperateur: { label: "Second opérateur", type: "heure", prix: 45 },
-    urgence24h: { label: "Intervention urgente (<24h)", type: "coef", coef: 1.20 },
-    weekendNuit: { label: "Nuit/Weekend", type: "coef", coef: 1.30 },
-    rapportPDF: { label: "Rapport détaillé (photos/mesures)", type: "flat", prix: 110 }
-  }
-};
+    function lsSet(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+    }
 
-// ====== Utils ======
-const € = (v)=> (v||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
-const r2 = (v)=> Math.round(v*100)/100;
-
-function computeServiceHT(key, qty, dims){
-  const s = PRICING.services[key];
-  let unit = s.base;
-  const coefTables = s.coefficients||{};
-  Object.keys(coefTables).forEach(k=>{
-    const choice = dims[k];
-    if(choice && coefTables[k][choice]!=null){ unit *= coefTables[k][choice]; }
-  });
-  const raw = unit * (Number(qty)||0);
-  return Math.max(raw, s.minForfait||0);
-}
-function computeDepHT(zone, km){
-  const d = PRICING.deplacement;
-  const forfait = d.forfaitZone[zone]||0;
-  const inclus = d.inclusKmParZone[zone]||0;
-  const surplus = Math.max(0, (Number(km)||0) - inclus);
-  return forfait + surplus*(d.coutKm||0);
-}
-function computeOptionsHT(optState){
-  let total=0, coef=1; const descr=[];
-  for(const [k,val] of Object.entries(optState)){
-    const o = PRICING.options[k]; if(!o) continue;
-    if(o.type==='flat' && val){ total+=o.prix; descr.push([o.label, o.prix]); }
-    if(o.type==='jour' && val.active){ const t=(val.jours||1)*o.prix; total+=t; descr.push([`${o.label} (${val.jours} j)`, t]); }
-    if(o.type==='heure' && val.active){ const t=(val.heures||1)*o.prix; total+=t; descr.push([`${o.label} (${val.heures} h)`, t]); }
-    if(o.type==='coef' && val){ coef*=o.coef; descr.push([`${o.label}`, `×${o.coef}`]); }
-  }
-  return {total, coef, descr};
-}
-
-// ====== UI bootstrap ======
-const serviceSel = document.querySelector('#service');
-const qtyInput  = document.querySelector('#qty');
-const qtyUnitEl = document.querySelector('#qtyUnit');
-const dimsBox   = document.querySelector('#dims');
-const zoneSel   = document.querySelector('#zone');
-const kmInput   = document.querySelector('#km');
-const kmIncl    = document.querySelector('#kmIncl');
-const optWrap   = document.querySelector('#options');
-
-const outServiceHT = document.querySelector('#serviceHT');
-const outDepHT     = document.querySelector('#depHT');
-const outOptHT     = document.querySelector('#optHT');
-const outCoef      = document.querySelector('#coef');
-const outTotalHT   = document.querySelector('#totalHT');
-const outTVA       = document.querySelector('#tva');
-const outTVARate   = document.querySelector('#tvaRate');
-const outTotalTTC  = document.querySelector('#totalTTC');
-const outCadence   = document.querySelector('#cadence');
-const outDuree     = document.querySelector('#dureeH');
-const outDetail    = document.querySelector('#detail');
-
-const resetBtn     = document.querySelector('#resetBtn');
-
-// Populate services
-for(const [k,v] of Object.entries(PRICING.services)){
-  const o=document.createElement('option'); o.value=k; o.textContent=v.label; serviceSel.appendChild(o);
-}
-serviceSel.value='facadesHP';
-
-// Populate options
-const state={
-  svcKey:'facadesHP', qty:100, zone:'Z1', km:10,
-  dims:{ hauteur:'<10m', complexite:'simple', pente:'<30°', encrassement:'moyen', format:'toiture' },
-  opts:{
-    eauChaude:false, eauOsmosee:false, captureEffluents:false, traitementRA:false,
-    nacelle:{active:false, jours:1}, secondOperateur:{active:false, heures:4},
-    urgence24h:false, weekendNuit:false, rapportPDF:false
-  }
-};
-
-function renderDims(){
-  dimsBox.innerHTML='';
-  const s = PRICING.services[state.svcKey];
-  qtyUnitEl.textContent = s.unite.includes('m²') ? 'm²' : (s.unite.includes('kWc')? 'kWc':'site');
-  const coeffs = s.coefficients||{};
-  const frag = document.createDocumentFragment();
-  const groups = Object.keys(coeffs);
-  if(groups.length){
-    const wrapper=document.createElement('div');
-    wrapper.className = groups.length>=3? 'row3':'row';
-    for(const g of groups){
-      const div=document.createElement('div');
-      const lab=document.createElement('label'); lab.textContent=g.charAt(0).toUpperCase()+g.slice(1);
-      const sel=document.createElement('select'); sel.dataset.dim=g;
-      for(const k of Object.keys(coeffs[g])){
-        const opt=document.createElement('option'); opt.value=k; opt.textContent=k; sel.appendChild(opt);
+    function initModels() {
+      services = lsGet("cdc_services", DEFAULT_SERVICES);
+      addons = lsGet("cdc_addons", DEFAULT_ADDONS);
+      config = lsGet("cdc_config", DEFAULT_CONFIG);
+      devis = lsGet("cdc_devis", {numero:"",dateISO:"",client:{name:"",email:"",phone:"",address:""},lignes:[],hors3430:false,totalHT:0,remise:0,tva:0,totalTTC:0,acompte:0,resteDu:0});
+      devisCounter = parseInt(localStorage.getItem("cdc_devis_counter")||"0",10);
+    }
+    function saveModels() {
+      lsSet("cdc_services",services);
+      lsSet("cdc_addons",addons);
+      lsSet("cdc_config",config);
+      lsSet("cdc_devis",devis);
+      localStorage.setItem("cdc_devis_counter",devisCounter);
+    }
+    function genNumero() {
+      if (!devis.numero) {
+        let d = new Date();
+        let yyyy = d.getFullYear();
+        let mm = String(d.getMonth()+1).padStart(2,"0");
+        let dd = String(d.getDate()).padStart(2,"0");
+        devisCounter++;
+        localStorage.setItem("cdc_devis_counter",devisCounter);
+        devis.numero = `CDC-${yyyy}${mm}${dd}-${String(devisCounter).padStart(3,"0")}`;
       }
-      sel.value = state.dims[g] || Object.keys(coeffs[g])[0];
-      sel.oninput=(e)=>{ state.dims[g]=e.target.value; compute(); };
-      div.appendChild(lab); div.appendChild(sel); wrapper.appendChild(div);
     }
-    frag.appendChild(wrapper);
-  }
-  dimsBox.appendChild(frag);
-}
 
-function renderOptions(){
-  optWrap.innerHTML='';
-  const keys = ['eauChaude','eauOsmosee','captureEffluents','traitementRA','rapportPDF','urgence24h','weekendNuit'];
-  for(const key of keys){
-    const o = PRICING.options[key]; if(!o) continue;
-    const div=document.createElement('div'); div.className='opt';
-    const left=document.createElement('div');
-    left.innerHTML=`<div><b>${o.label}</b></div><div class="muted" style="font-size:12px">${o.type==='coef'?`Coefficient ×${o.coef}`:`${€(o.prix)} ${o.type==='flat'?'forfait':''}`}</div>`;
-    const right=document.createElement('input'); right.type='checkbox'; right.checked=!!state.opts[key];
-    right.oninput=(e)=>{ state.opts[key]=e.target.checked; compute(); };
-    div.appendChild(left); div.appendChild(right); optWrap.appendChild(div);
-  }
-  // Nacelle
-  const nac=document.createElement('div'); nac.className='opt';
-  nac.innerHTML=`<div><b>${PRICING.options.nacelle.label}</b><div class="muted" style="font-size:12px">${€(PRICING.options.nacelle.prix)} / jour</div></div>`;
-  const rightN=document.createElement('div'); rightN.style.display='flex'; rightN.style.alignItems='center'; rightN.style.gap='8px';
-  const toggleN=document.createElement('input'); toggleN.type='checkbox'; toggleN.checked=!!state.opts.nacelle.active;
-  const days=document.createElement('input'); days.type='number'; days.min=1; days.value=state.opts.nacelle.jours; days.style.width='80px';
-  toggleN.oninput=(e)=>{ state.opts.nacelle.active=e.target.checked; compute(); };
-  days.oninput=(e)=>{ state.opts.nacelle.jours=Number(e.target.value||1); compute(); };
-  rightN.appendChild(toggleN); rightN.appendChild(days); nac.appendChild(rightN); optWrap.appendChild(nac);
+    function round2(x) { return Math.round((x+Number.EPSILON)*100)/100; }
 
-  // Second opérateur
-  const so=document.createElement('div'); so.className='opt';
-  so.innerHTML=`<div><b>${PRICING.options.secondOperateur.label}</b><div class="muted" style="font-size:12px">${€(PRICING.options.secondOperateur.prix)} / heure</div></div>`;
-  const rightS=document.createElement('div'); rightS.style.display='flex'; rightS.style.alignItems='center'; rightS.style.gap='8px';
-  const toggleS=document.createElement('input'); toggleS.type='checkbox'; toggleS.checked=!!state.opts.secondOperateur.active;
-  const hrs=document.createElement('input'); hrs.type='number'; hrs.min=1; hrs.value=state.opts.secondOperateur.heures; hrs.style.width='80px';
-  toggleS.oninput=(e)=>{ state.opts.secondOperateur.active=e.target.checked; compute(); };
-  hrs.oninput=(e)=>{ state.opts.secondOperateur.heures=Number(e.target.value||1); compute(); };
-  rightS.appendChild(toggleS); rightS.appendChild(hrs); so.appendChild(rightS); optWrap.appendChild(so);
-}
+    function calc() {
+      let sumLignes = 0;
+      devis.lignes.forEach(l => {
+        let s = services.find(sv=>sv.id===l.serviceId);
+        if (!s) return;
+        let base = (l.qte || 0) * l.pu;
+        let ht = Math.max(base, l.min || 0);
+        let addonsSum = 0;
+        l.addons.forEach(ad => { if (!ad.offert) addonsSum += ad.pu; });
+        ht += addonsSum;
+        l._ht = ht;
+        sumLignes += ht;
+      });
+      let total = sumLignes;
+      if (devis.hors3430) total += config.forfaitHors3430;
+      let remiseVal = total * (config.remisePct/100);
+      let apres = total - remiseVal;
+      let tva = apres * (config.tva/100);
+      let ttc = apres + tva;
+      devis.totalHT = round2(total);
+      devis.remise = round2(remiseVal);
+      devis.tva = round2(tva);
+      devis.totalTTC = round2(ttc);
+      devis.acompte = round2(ttc * 0.30);
+      devis.resteDu = round2(ttc - devis.acompte);
+    }
 
-function compute(){
-  // Units
-  const svc = PRICING.services[state.svcKey];
-  outCadence.textContent = `${svc.cadence} ${svc.unite.includes('kWc')?'kWc/h':svc.unite.includes('site')?'site/h':'m²/h'}`;
-  kmIncl.textContent = PRICING.deplacement.inclusKmParZone[state.zone]||0;
-  outTVARate.textContent = Math.round((PRICING.tva||0)*100);
+    function renderSections() {
+      ["sec-meteo","sec-client","sec-prestations","sec-addons","sec-deplacement","sec-remise","sec-validation"]
+        .forEach(id => {
+          let sec = document.getElementById(id);
+          let h = sec.querySelector("h2");
+          h.onclick = ()=> { sec.classList.toggle("open"); };
+        });
+    }
 
-  const svcHT = r2(computeServiceHT(state.svcKey, state.qty, state.dims));
-  const depHT = r2(computeDepHT(state.zone, state.km));
-  const {total:optHT, coef, descr} = computeOptionsHT(state.opts);
-  const totalHT = r2((svcHT + depHT + optHT) * coef);
-  const tva = r2(totalHT * PRICING.tva);
-  const ttc = r2(totalHT + tva);
+    function renderServiceOpts() {
+      let sel = document.getElementById("line-service");
+      sel.innerHTML = "";
+      services.forEach(s=>{ let o=document.createElement("option"); o.value=s.id; o.textContent=s.label; sel.append(o); });
+    }
 
-  outServiceHT.textContent = €(svcHT);
-  outDepHT.textContent     = €(depHT);
-  outOptHT.textContent     = €(optHT);
-  outCoef.textContent      = `× ${coef.toFixed(2)}`;
-  outTotalHT.textContent   = €(totalHT);
-  outTVA.textContent       = €(tva);
-  outTotalTTC.textContent  = €(ttc);
+    function renderLines() {
+      let tbody = document.querySelector("#table-lignes tbody");
+      tbody.innerHTML = "";
+      devis.lignes.forEach(l=>{
+        let s = services.find(sv=>sv.id===l.serviceId);
+        let tr = document.createElement("tr");
+        let td0 = document.createElement("td");
+        td0.textContent = s.label;
+        td0.classList.add("tooltip");
+        td0.setAttribute("data-desc", s.desc);
+        tr.append(td0);
+        ["qte","unite","pu","min"].forEach(f=>{
+          let td=document.createElement("td");
+          td.textContent = f==="pu"||f==="min" ? (l[f]||0).toFixed(2) : l[f];
+          tr.append(td);
+        });
+        let tdH = document.createElement("td");
+        tdH.textContent = l.hors3430 ? "Oui":"Non";
+        tr.append(tdH);
+        let td_HT = document.createElement("td");
+        td_HT.textContent = (l._ht||0).toFixed(2);
+        tr.append(td_HT);
+        let tdA = document.createElement("td");
+        let btnE = document.createElement("button"); btnE.textContent="✏️"; btnE.classList.add("btn-small");
+        btnE.onclick = ()=> openLine(l.id);
+        tdA.append(btnE);
+        let btnDup=document.createElement("button"); btnDup.textContent="📄"; btnDup.classList.add("btn-small");
+        btnDup.onclick = ()=> duplicateLine(l.id);
+        tdA.append(btnDup);
+        let btnDel=document.createElement("button"); btnDel.textContent="🗑"; btnDel.classList.add("btn-small");
+        btnDel.onclick = ()=> { deleteLine(l.id); };
+        tdA.append(btnDel);
+        tr.append(tdA);
+        tbody.append(tr);
+      });
+    }
 
-  // durée (approx = qty/cadence * produit des coeff)
-  let timeCoef=1; const coeffs = svc.coefficients||{};
-  for(const k of Object.keys(coeffs)){
-    const choice=state.dims[k]; if(choice && coeffs[k][choice]) timeCoef *= coeffs[k][choice];
-  }
-  const baseH = (Number(state.qty)||0) / (svc.cadence||1);
-  outDuree.textContent = r2(baseH * timeCoef);
+    function refresh() {
+      genNumero();
+      renderServiceOpts();
+      calc();
+      renderLines();
+      renderTotals();
+      checkVent();
+      saveModels();
+    }
 
-  // Détail
-  let html = '';
-  html += `<div>Prestation : <b>${svc.label}</b></div>`;
-  html += `<div>Quantité : <b>${state.qty}</b> ${svc.unite.includes('kWc')?'kWc':svc.unite.includes('m²')?'m²':'site'}</div>`;
-  for(const k of Object.keys(coeffs)){
-    const val = state.dims[k]; const c = coeffs[k][val]||1;
-    html += `<div>${k} : <b>${val}</b> (coef ${c})</div>`;
-  }
-  html += `<div>Zone : <b>${state.zone}</b> — ${state.km} km</div>`;
-  if(descr.length){
-    html += `<div>Options : ${descr.map(d=>`<span class="badge" style="margin-right:6px">${d[0]} ${typeof d[1]==='number'?`(${€(d[1])})`:d[1]}</span>`).join('')}</div>`;
-  }
-  outDetail.innerHTML = html;
-}
+    function renderTotals() {
+      document.getElementById("devis-numero").textContent = devis.numero;
+      document.getElementById("totalHT").textContent = devis.totalHT.toFixed(2)+" €";
+      document.getElementById("remise-val").textContent = (devis.remise||0).toFixed(2)+" €";
+      document.getElementById("tva-val").textContent = devis.tva.toFixed(2)+" €";
+      document.getElementById("totalTTC").textContent = devis.totalTTC.toFixed(2)+" €";
+      document.getElementById("acompte").textContent = devis.acompte.toFixed(2)+" €";
+      document.getElementById("reste").textContent = devis.resteDu.toFixed(2)+" €";
+      document.getElementById("footer-deplacement").style.display = devis.hors3430 ? "block":"none";
+    }
 
-// Wire inputs
-serviceSel.oninput = (e)=>{ state.svcKey=e.target.value; renderDims(); compute(); };
-qtyInput.oninput   = (e)=>{ state.qty=Number(e.target.value||0); compute(); };
-zoneSel.oninput    = (e)=>{ state.zone=e.target.value; compute(); };
-kmInput.oninput    = (e)=>{ state.km=Number(e.target.value||0); compute(); };
+    // Ligne gestion
+    function openLine(id) {
+      let panel = document.getElementById("panel-line");
+      panel.classList.add("open");
+      let form = document.getElementById("form-line");
+      form.dataset.edit = id||"";
+      let l = devis.lignes.find(x=>x.id===id);
+      renderServiceOpts();
+      if (l) {
+        document.getElementById("line-service").value = l.serviceId;
+        document.getElementById("line-qte").value = l.qte;
+        document.getElementById("line-unite").value = l.unite;
+        document.getElementById("line-pu").value = l.pu;
+        document.getElementById("line-min").value = l.min;
+        document.getElementById("line-hors3430").checked = l.hors3430;
+      } else {
+        document.getElementById("line-service").value = services[0].id;
+        document.getElementById("line-qte").value = "";
+        document.getElementById("line-unite").value = services[0].unite;
+        document.getElementById("line-pu").value = services[0].pu;
+        document.getElementById("line-min").value = services[0].min;
+        document.getElementById("line-hors3430").checked = false;
+      }
+    }
 
-resetBtn.onclick = ()=>{
-  serviceSel.value='facadesHP'; state.svcKey='facadesHP';
-  qtyInput.value=100; state.qty=100;
-  zoneSel.value='Z1'; state.zone='Z1';
-  kmInput.value=10; state.km=10;
-  state.dims={ hauteur:'<10m', complexite:'simple', pente:'<30°', encrassement:'moyen', format:'toiture' };
-  state.opts={ eauChaude:false, eauOsmosee:false, captureEffluents:false, traitementRA:false, nacelle:{active:false, jours:1}, secondOperateur:{active:false, heures:4}, urgence24h:false, weekendNuit:false, rapportPDF:false };
-  renderDims(); renderOptions(); compute();
-};
+    function closeLine() { document.getElementById("panel-line").classList.remove("open"); }
 
-renderDims(); renderOptions(); compute();
-</script>
+    document.getElementById("btn-add-line").onclick = ()=> openLine("");
+    document.getElementById("btn-cancel-line").onclick = closeLine;
+    document.getElementById("form-line").onsubmit = function(e){
+      e.preventDefault();
+      let id = this.dataset.edit;
+      let serviceId = document.getElementById("line-service").value;
+      let qte = parseFloat(document.getElementById("line-qte").value);
+      if (!qte || qte<=0) { alert("Quantité invalide"); return; }
+      let unite = document.getElementById("line-unite").value;
+      let pu = parseFloat(document.getElementById("line-pu").value);
+      let min = parseFloat(document.getElementById("line-min").value);
+      let hors = document.getElementById("line-hors3430").checked;
+      let lad = [];
+      addons.forEach(ad=>{
+        // simplifié : pas les total add-ons par ligne ici
+      });
+      if (id) {
+        let l=devis.lignes.find(x=>x.id===id);
+        l.serviceId=serviceId; l.qte=qte; l.unite=unite; l.pu=pu; l.min=min; l.hors3430=hors;
+      } else {
+        devis.lignes.push({id:"l_"+Date.now(),serviceId, qte, unite, pu, min, hors, addons:[]});
+      }
+      closeLine();
+      refresh();
+      showToast("Ligne sauvegardée");
+    };
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeLine(); });
+    document.getElementById("remisePct").oninput = e=>{
+      config.remisePct = parseFloat(e.target.value)||0;
+      refresh();
+    };
+    document.getElementById("chk-hors3430").onchange = e=>{
+      devis.hors3430 = e.target.checked;
+      refresh();
+    };
+    document.getElementById("missionType").onchange = checkVent;
+    document.getElementById("vent").oninput = checkVent;
+    document.getElementById("btn-download").onclick = ()=> window.print();
+    document.getElementById("btn-email").onclick = function(){
+      if (!/\S+@\S+\.\S+/.test(devis.client.email || document.getElementById("client-email").value)) { alert("Email invalide"); return; }
+      if (!document.getElementById("rgpd").checked) { alert("Vous devez accepter le RGPD"); return; }
+      let subj = encodeURIComponent("Devis CDC — "+devis.numero);
+      let body = `Devis N°: ${devis.numero}\nTotal TTC: ${devis.totalTTC.toFixed(2)} €\nAcompte: ${devis.acompte.toFixed(2)} €\nReste dû: ${devis.resteDu.toFixed(2)} €`;
+      let mailto = `mailto:${document.getElementById("client-email").value}?subject=${subj}&body=${encodeURIComponent(body)}&cc=nicolas.gadea.pro@gmail.com`;
+      window.location.href = mailto;
+    };
+    document.getElementById("btn-new").onclick = function(){
+      if (confirm("Nouveau devis : effacer le devis courant ?")) {
+        localStorage.removeItem("cdc_devis");
+        initModels();
+        refresh();
+        showToast("Devis vierge");
+      }
+    };
+    document.getElementById("btn-admin").onclick = function(){ document.getElementById("modal-admin").classList.add("open"); };
+    document.getElementById("btn-admin-cancel").onclick = function(){ document.getElementById("modal-admin").classList.remove("open"); };
+    document.getElementById("btn-admin-login").onclick = function(){
+      if (document.getElementById("admin-pass").value === "Oddysseus-34!") {
+        document.getElementById("admin-pass").value="";
+        showToast("Admin connecté");
+        document.getElementById("admin-content").style.display="block";
+        renderAdmin();
+      } else alert("Mot de passe incorrect");
+    };
+    function renderAdmin(){
+      let ap = document.getElementById("admin-prestations");
+      ap.innerHTML="";
+      services.forEach(s=>{
+        let d=document.createElement("div");
+        d.textContent=`${s.label} — PU:${s.pu.toFixed(2)} — min:${s.min.toFixed(2)} — unité:${s.unite}`;
+        let btn = document.createElement("button");
+        btn.textContent="✏️"; btn.classList.add("btn-small");
+        btn.onclick=()=> {
+          let np = prompt("Nouveau PU pour "+s.label, s.pu);
+          if (np!==null) { s.pu=parseFloat(np); lsSet("cdc_services",services); refresh(); }
+        };
+        d.append(btn);
+        ap.append(d);
+      }
+      );
+      let aa = document.getElementById("admin-addons");
+      aa.innerHTML="";
+      addons.forEach(ad=>{
+        let d=document.createElement("div");
+        d.textContent=`${ad.label} — PU:${ad.pu.toFixed(2)}`;
+        let btn = document.createElement("button");
+        btn.textContent="✏️"; btn.classList.add("btn-small");
+        btn.onclick=()=> {
+          let np = prompt("PU add‑on "+ad.label, ad.pu);
+          if (np!==null) { ad.pu=parseFloat(np); lsSet("cdc_addons",addons); refresh(); }
+        };
+        d.append(btn);
+        aa.append(d);
+      });
+      let inpF = document.getElementById("admin-forfait-h3430");
+      inpF.value = config.forfaitHors3430;
+      inpF.onchange = e=> { config.forfaitHors3430 = parseFloat(e.target.value)||0; lsSet("cdc_config",config); refresh(); };
+      let inpC1 = document.getElementById("admin-company-name");
+      inpC1.value = config.company.name;
+      inpC1.onchange = e=> { config.company.name = e.target.value; lsSet("cdc_config",config); };
+      // idem pour email, phone, siren, etc.
+      let cb = document.getElementById("admin-color-bleu");
+      cb.value = config.colors.blue;
+      cb.onchange = e=> { config.colors.blue = e.target.value; document.documentElement.style.setProperty("--bleu", e.target.value); lsSet("cdc_config",config); };
+      let co = document.getElementById("admin-color-orange");
+      co.value = config.colors.orange;
+      co.onchange = e=> { config.colors.orange = e.target.value; document.documentElement.style.setProperty("--orange", e.target.value); lsSet("cdc_config",config); };
+    }
+    function restoreDefaults(){
+      if (confirm("Restaurer configuration par défaut ?")) {
+        localStorage.removeItem("cdc_services");
+        localStorage.removeItem("cdc_addons");
+        localStorage.removeItem("cdc_config");
+        initModels();
+        refresh();
+        showToast("Configuration restaurée");
+      }
+    }
+    document.getElementById("btn-restore-defaults").onclick = restoreDefaults;
+    document.getElementById("btn-load-tests").onclick = function(){
+      if (confirm("Charger cas tests (écrasera devis actuel) ?")) {
+        devis.lignes = [
+          {id:"t1",serviceId:"s1",qte:200,unite:services.find(s=>s.id==="s1").unite,pu:services.find(s=>s.id==="s1").pu,min:services.find(s=>s.id==="s1").min,hors3430:false,addons:[]},
+          {id:"t2",serviceId:"s4",qte:800,unite:services.find(s=>s.id==="s4").unite,pu:services.find(s=>s.id==="s4").pu,min:services.find(s=>s.id==="s4").min,hors3430:false,addons:[]}
+        ];
+        refresh();
+        showToast("Tests chargés");
+      }
+    };
+    function checkVent(){
+      let v=parseFloat(document.getElementById("vent").value)||0;
+      let t=document.getElementById("missionType").value;
+      let seuil = config.seuilsVent[t]||Infinity;
+      let motif = config.motifsVent[t]||"";
+      let al = document.getElementById("alerteVent");
+      if (v > seuil) {
+        al.textContent = "⚠️ " + motif;
+        al.style.display="block";
+      } else al.style.display="none";
+    }
+    function showToast(m){
+      let t = document.getElementById("toaster");
+      t.textContent = m;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"),2000);
+    }
+
+    // Init
+    window.onload = function(){
+      initModels();
+      renderSections();
+      refresh();
+    };
+  </script>
 </body>
 </html>
