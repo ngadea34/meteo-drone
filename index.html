@@ -1,361 +1,389 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calendrier météo — Interventions drone (v4.7)</title>
-  <style>
-    :root { --bg:#0b0c10; --card:#111217; --muted:#a0a4ad; --text:#e9eef7; --accent:#4cc9f0; --border:#22242b; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans; background:linear-gradient(180deg, #0b0c10, #141622); color:var(--text); }
-    a { color: var(--accent); }
-    .container { max-width:1200px; margin: 24px auto; padding: 0 16px; }
-    .card { background: var(--card); border:1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-    .card-header { padding:16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
-    .card-title { font-weight:600; font-size:18px; }
-    .card-sub { color: var(--muted); font-size:12px; }
-    .card-body { padding: 16px; }
-    .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-    .btn { background:#1b1e29; color:var(--text); border:1px solid var(--border); padding:8px 12px; border-radius:10px; cursor:pointer; }
-    .btn-outline { background: transparent; border:1px solid var(--border); }
-    .input, .select { background:#141826; color:var(--text); border:1px solid var(--border); padding:8px 10px; border-radius:10px; }
-    .grid { display:grid; gap:1px; background:var(--border); border-radius:12px; overflow:hidden; }
-    .grid-7 { grid-template-columns: repeat(7, minmax(0,1fr)); }
-    .cell { min-height:120px; padding:8px; background:#111217; position:relative; border:1px solid rgba(255,255,255,0.06); transition:filter .2s ease; }
-    .cell:hover { filter: brightness(1.05); }
-    .cell.muted { background:#0e1018; opacity:.65 }
-    .cell .day { font-size:12px; color:var(--muted); }
-    .badge { font-size:10px; padding:2px 6px; border-radius:6px; border:1px solid var(--border); color:#e8f0ff; background:#0f1f3a; }
-    .muted { color: var(--muted); }
-    .weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:6px; color:var(--muted); font-size:12px; }
-    .panel { display:flex; gap:12px; flex-wrap:wrap; }
-    .loc-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--border); }
-    .footer { margin-top:16px; font-size:12px; color:var(--muted); }
-    .debug { margin-top:10px; background:#0e1420; border:1px solid #223; border-radius:8px; padding:10px; font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace; color:#a6d3ff; white-space:pre-wrap; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CDC — Calculateur de devis</title>
+<style>
+  :root{--bg:#f7f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;--pri:#2563eb;--ok:#16a34a;--warn:#ea580c;--border:#e5e7eb}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+  header{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:20px 24px}
+  header h1{font-size:20px;margin:0}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 16px 32px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+  .card h2{margin:0;padding:16px 16px 8px;font-size:18px}
+  .card .sub{color:var(--muted);padding:0 16px 12px}
+  .card .content{padding:16px}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  input[type="number"], input[type="text"], select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .row4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+  .opt{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+  .muted{color:var(--muted)}
+  .badge{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:2px 10px;font-size:12px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
+  .btn.primary{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .btn.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
+  .stack{display:flex;gap:8px;flex-wrap:wrap}
+  .total{font-size:22px;font-weight:800}
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{padding:8px 6px;border-bottom:1px dashed var(--border);text-align:right}
+  .table th:first-child,.table td:first-child{text-align:left}
+  .hl{background:#f3f4f6;border-radius:12px;padding:10px}
+  footer{padding:16px;color:var(--muted);text-align:center}
+  /* Print */
+  @media print{
+    header,.noprint{display:none}
+    body{background:#fff}
+    .wrap{max-width:100%;padding:0}
+    .grid{grid-template-columns:1fr 1fr}
+    .card{box-shadow:none;border:1px solid #ddd}
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Calendrier interventions drone</div>
-          <div class="card-sub">v4.7 · Fix agrégation (union des jours) · Segments 16j · ignore le passé · irradiance convertie · export .ics</div>
-        </div>
+<header>
+  <h1>CDC — Calculateur de devis</h1>
+  <div class="stack noprint">
+    <button class="btn" id="resetBtn">Réinitialiser</button>
+    <button class="btn primary" onclick="window.print()">Exporter / Imprimer</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="grid">
+    <section class="card">
+      <h2>Paramètres</h2>
+      <div class="sub">Prototype mono‑fichier — Remplir les barèmes depuis « cdc version 2.pdf » (voir objet PRICING dans le code).</div>
+      <div class="content">
         <div class="row">
-          <button id="prevBtn" class="btn btn-outline" title="Mois précédent">⟵</button>
-          <div id="monthLabel" style="width: 180px; text-align:center"></div>
-          <button id="nextBtn" class="btn btn-outline" title="Mois suivant">⟶</button>
-          <button id="todayBtn" class="btn" title="Revenir à aujourd'hui">Aujourd'hui</button>
-          <button id="exportBtn" class="btn btn-outline" title="Exporter les jours favorables">Export .ics</button>
+          <div>
+            <label for="service">Prestation</label>
+            <select id="service"></select>
+          </div>
+          <div>
+            <label for="qty">Quantité (<span id="qtyUnit">m²</span>)</label>
+            <input id="qty" type="number" min="0" step="1" value="100" />
+          </div>
+        </div>
+
+        <div id="dims"></div>
+
+        <div class="row" style="margin-top:8px">
+          <div>
+            <label for="zone">Zone</label>
+            <select id="zone">
+              <option value="Z1">Z1 (intra)</option>
+              <option value="Z2">Z2 (proche)</option>
+              <option value="Z3">Z3 (élargi)</option>
+            </select>
+          </div>
+          <div>
+            <label for="km">Kilométrage total <span class="muted">(<span id="kmIncl">0</span> km inclus)</span></label>
+            <input id="km" type="number" min="0" step="1" value="10" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label>Options</label>
+          <div id="options" class="row"></div>
         </div>
       </div>
-      <div class="card-body">
-        <div class="panel">
-          <label>Profil
-            <select id="profileSelect" class="select"></select>
-          </label>
-          <label>Seuil favorable
-            <input id="favInput" type="number" min="0" max="100" class="input" style="width:80px" />
-          </label>
-          <label><input id="conservativeChk" type="checkbox" checked/> Mode conservateur (min)</label>
-          <label><input id="offlineChk" type="checkbox"/> Mode hors‑ligne (simulé)</label>
+    </section>
+
+    <section class="card">
+      <h2>Résultat</h2>
+      <div class="content">
+        <table class="table">
+          <tbody>
+            <tr><td>Service (HT)</td><td id="serviceHT">—</td></tr>
+            <tr><td>Déplacement (HT)</td><td id="depHT">—</td></tr>
+            <tr><td>Options (HT)</td><td id="optHT">—</td></tr>
+            <tr><td>Coefficient (urgence / nuit)</td><td id="coef">× 1.00</td></tr>
+            <tr><th>Total HT</th><th id="totalHT">—</th></tr>
+            <tr><td>TVA (<span id="tvaRate">20</span>%)</td><td id="tva">—</td></tr>
+            <tr><th>Total TTC</th><th id="totalTTC" class="total">—</th></tr>
+          </tbody>
+        </table>
+
+        <div class="hl" style="margin-top:12px">
+          <b>Durée estimée</b> : ≈ <span id="dureeH">—</span> h — cadence <span id="cadence">—</span>
+          <div class="muted" style="font-size:12px;margin-top:4px">Estimation indicative. Sous réserve d'accès, sécurité, rinçages, tests pH/RA, météo et autorisations.</div>
         </div>
 
-        <div class="panel" style="margin-top:10px">
-          <div><strong>Lieux analysés</strong></div>
-          <div id="locList" style="flex:1"></div>
-        </div>
-
-        <div id="status" class="muted" style="margin:8px 0"></div>
-
-        <div class="weekdays"><div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div></div>
-        <div id="grid" class="grid grid-7"></div>
-
-        <div class="footer">
-          Météo : Open‑Meteo · (CORS OK) — Hébergeable en statique (Netlify, GitHub Pages, S3…).
-          <div class="debug" id="debugBox" style="display:none"></div>
+        <div style="margin-top:12px">
+          <details>
+            <summary><b>Détail calcul</b></summary>
+            <div id="detail" style="margin-top:8px;font-size:13px"></div>
+          </details>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 
-  <script>
-  function startOfMonth(d){ const x = new Date(d); x.setDate(1); x.setHours(0,0,0,0); return x; }
-  function endOfMonth(d){ const x = startOfMonth(d); x.setMonth(x.getMonth()+1); x.setDate(0); x.setHours(23,59,59,999); return x; }
-  function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
-  function subMonths(d, n){ const x = new Date(d); x.setMonth(x.getMonth()-n); return x; }
-  function addMonths(d, n){ const x = new Date(d); x.setMonth(x.getMonth()+n); return x; }
-  function isSameMonth(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth(); }
-  function isSameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
-  function startOfWeek(d){ const x = new Date(d); const day=(x.getDay()+6)%7; return addDays(new Date(x.getFullYear(), x.getMonth(), x.getDate()), -day); }
-  function endOfWeek(d){ const s = startOfWeek(d); return addDays(s, 6); }
-  function formatMonthFR(d){ return d.toLocaleString('fr-FR', { month:'long', year:'numeric' }); }
-  function formatYMD(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-  function formatICS(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}${m}${day}`; }
+  <section class="card" style="margin-top:16px">
+    <h2>Mentions</h2>
+    <div class="content muted" style="font-size:12px">
+      Devis généré à titre indicatif. Validité 30 jours. Conditions particulières : sécurité sur site (éventuel parachute/FTS),
+      gestion des effluents (capture, filtration, pH/RA), contraintes météorologiques (vent/pluie/températures), autorisations locales.
+    </div>
+  </section>
+</div>
+<footer class="noprint">CDC — Prototype v1 HTML autonome</footer>
 
-  const LOCATIONS=[
-    { id:"montpellier", name:"Montpellier centre", lat:43.611, lon:3.877, weight:1 },
-    { id:"mauguio", name:"Mauguio (ferme PV)", lat:43.616, lon:4.006, weight:1 },
-    { id:"lattes", name:"Lattes", lat:43.567, lon:3.904, weight:1 },
-    { id:"castelnau", name:"Castelnau‑le‑Lez", lat:43.633, lon:3.914, weight:1 }
-  ];
-  const PROFILES=[
-    { id:"inspection", label:"Inspection toiture", thresholds:{ demoussage:{ windIdealMax:12, windHardMax:20, rainStrict:false, tempMin:5, tempMax:30 }, favorableThreshold:65 } },
-    { id:"thermo", label:"Thermographie PV", thresholds:{ demoussage:{ windIdealMax:12, windHardMax:20, rainStrict:false, tempMin:8, tempMax:28 }, favorableThreshold:70 } },
-    { id:"nettoyage", label:"Nettoyage PV", thresholds:{ demoussage:{ windIdealMax:12, windHardMax:20, rainStrict:false, tempMin:10, tempMax:30 }, favorableThreshold:70 } },
-    { id:"pulverisation", label:"Pulvérisation (démoussage)", thresholds:{ demoussage:{ windIdealMax:10, windHardMax:18, rainStrict:true, tempMin:8, tempMax:25 }, favorableThreshold:75 } },
-  ];
-  const TYPES=["PV Cleaning","Thermographie PV","Inspection toiture","Démoussage toiture"];
+<script>
+// ====== BARÈME — À RENSEIGNER DEPUIS « cdc version 2.pdf » ======
+const PRICING = {
+  tva: 0.20,
+  deplacement: {
+    forfaitZone: { Z1: 0, Z2: 45, Z3: 90 },
+    coutKm: 0.85,
+    inclusKmParZone: { Z1: 20, Z2: 40, Z3: 60 }
+  },
+  services: {
+    facadesHP: {
+      label: "Nettoyage façades (haute pression)", unite: "€/m²",
+      base: 6.5, minForfait: 450, cadence: 80,
+      coefficients: { hauteur: {"<10m":1, "10–20m":1.15, ">20m":1.30}, complexite:{simple:1,moyenne:1.15,complexe:1.30} }
+    },
+    facadesLP: {
+      label: "Nettoyage façades (basse pression/softwash)", unite: "€/m²",
+      base: 8.0, minForfait: 480, cadence: 60,
+      coefficients: { hauteur: {"<10m":1, "10–20m":1.15, ">20m":1.25}, complexite:{simple:1,moyenne:1.15,complexe:1.25} }
+    },
+    demoussageToiture: {
+      label: "Démoussage toiture (tether + mousse)", unite: "€/m²",
+      base: 9.5, minForfait: 520, cadence: 55,
+      coefficients: { pente: {"<30°":1, "30–45°":1.15, ">45°":1.30}, complexite:{simple:1,noue:1.15,fragile:1.25} }
+    },
+    pvNettoyage: {
+      label: "Nettoyage panneaux PV", unite: "€/m²",
+      base: 5.5, minForfait: 350, cadence: 120,
+      coefficients: { encrassement: { faible:1, moyen:1.10, fort:1.25 } }
+    },
+    pvThermographie: {
+      label: "Thermographie PV (drone)", unite: "€/kWc",
+      base: 1.2, minForfait: 600, cadence: 500,
+      coefficients: { format: { toiture:1.10, ombrieres:1, sol:0.90 } }
+    },
+    inspectionToiture: {
+      label: "Inspection toiture (photos/rapport)", unite: "€/site",
+      base: 420, minForfait: 420, cadence: 1,
+      coefficients: { complexite: { simple:1, moyenne:1.15, complexe:1.30 } }
+    }
+  },
+  options: {
+    eauChaude: { label: "Eau chaude", type: "flat", prix: 90 },
+    eauOsmosee: { label: "Eau osmosée/RO", type: "flat", prix: 45 },
+    captureEffluents: { label: "Capture & filtration effluents", type: "flat", prix: 120 },
+    traitementRA: { label: "Traitement pH/RA local", type: "flat", prix: 65 },
+    nacelle: { label: "Location nacelle", type: "jour", prix: 280 },
+    secondOperateur: { label: "Second opérateur", type: "heure", prix: 45 },
+    urgence24h: { label: "Intervention urgente (<24h)", type: "coef", coef: 1.20 },
+    weekendNuit: { label: "Nuit/Weekend", type: "coef", coef: 1.30 },
+    rapportPDF: { label: "Rapport détaillé (photos/mesures)", type: "flat", prix: 110 }
+  }
+};
 
-  function clamp(n,a=0,b=100){ return Math.max(a,Math.min(b,n)); }
-  function avg(arr){ return arr.reduce((s,x)=>s+x,0)/(arr.length||1); }
-  function hslFromScore(s){ const hue=(s/100)*120; return `hsl(${hue} 85% 68%)`; }
-  function scaleDesc(x,a,b){ if(x<=a) return 100; if(x>=b) return 0; return 100*(1-(x-a)/(b-a)); }
-  function scaleAsc(x,a,b){ if(x>=b) return 100; if(x<=a) return 0; return 100*(x-a)/(b-a); }
-  function scaleBell(x,minG,maxG){ if(x<=minG) return clamp((x/minG)*100); if(x>=maxG) return clamp((maxG/x)*100); return 100; }
+// ====== Utils ======
+const € = (v)=> (v||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+const r2 = (v)=> Math.round(v*100)/100;
 
-  function scoreForType(type,w,thr){
-    switch(type){
-      case "Thermographie PV":{
-        const sWind=scaleDesc(w.wind_gust_kmh,15,35);
-        const sRain=w.precip_mm===0?100:(w.precip_mm<2?60:10);
-        const sIrr=scaleAsc(w.irradiance_wh_m2,2500,5000);
-        const mid=(w.tmin+w.tmax)/2; const sT=100-Math.abs(mid-24)*5;
-        return clamp(0.35*sWind + 0.4*sRain + 0.2*sIrr + 0.05*sT);
+function computeServiceHT(key, qty, dims){
+  const s = PRICING.services[key];
+  let unit = s.base;
+  const coefTables = s.coefficients||{};
+  Object.keys(coefTables).forEach(k=>{
+    const choice = dims[k];
+    if(choice && coefTables[k][choice]!=null){ unit *= coefTables[k][choice]; }
+  });
+  const raw = unit * (Number(qty)||0);
+  return Math.max(raw, s.minForfait||0);
+}
+function computeDepHT(zone, km){
+  const d = PRICING.deplacement;
+  const forfait = d.forfaitZone[zone]||0;
+  const inclus = d.inclusKmParZone[zone]||0;
+  const surplus = Math.max(0, (Number(km)||0) - inclus);
+  return forfait + surplus*(d.coutKm||0);
+}
+function computeOptionsHT(optState){
+  let total=0, coef=1; const descr=[];
+  for(const [k,val] of Object.entries(optState)){
+    const o = PRICING.options[k]; if(!o) continue;
+    if(o.type==='flat' && val){ total+=o.prix; descr.push([o.label, o.prix]); }
+    if(o.type==='jour' && val.active){ const t=(val.jours||1)*o.prix; total+=t; descr.push([`${o.label} (${val.jours} j)`, t]); }
+    if(o.type==='heure' && val.active){ const t=(val.heures||1)*o.prix; total+=t; descr.push([`${o.label} (${val.heures} h)`, t]); }
+    if(o.type==='coef' && val){ coef*=o.coef; descr.push([`${o.label}`, `×${o.coef}`]); }
+  }
+  return {total, coef, descr};
+}
+
+// ====== UI bootstrap ======
+const serviceSel = document.querySelector('#service');
+const qtyInput  = document.querySelector('#qty');
+const qtyUnitEl = document.querySelector('#qtyUnit');
+const dimsBox   = document.querySelector('#dims');
+const zoneSel   = document.querySelector('#zone');
+const kmInput   = document.querySelector('#km');
+const kmIncl    = document.querySelector('#kmIncl');
+const optWrap   = document.querySelector('#options');
+
+const outServiceHT = document.querySelector('#serviceHT');
+const outDepHT     = document.querySelector('#depHT');
+const outOptHT     = document.querySelector('#optHT');
+const outCoef      = document.querySelector('#coef');
+const outTotalHT   = document.querySelector('#totalHT');
+const outTVA       = document.querySelector('#tva');
+const outTVARate   = document.querySelector('#tvaRate');
+const outTotalTTC  = document.querySelector('#totalTTC');
+const outCadence   = document.querySelector('#cadence');
+const outDuree     = document.querySelector('#dureeH');
+const outDetail    = document.querySelector('#detail');
+
+const resetBtn     = document.querySelector('#resetBtn');
+
+// Populate services
+for(const [k,v] of Object.entries(PRICING.services)){
+  const o=document.createElement('option'); o.value=k; o.textContent=v.label; serviceSel.appendChild(o);
+}
+serviceSel.value='facadesHP';
+
+// Populate options
+const state={
+  svcKey:'facadesHP', qty:100, zone:'Z1', km:10,
+  dims:{ hauteur:'<10m', complexite:'simple', pente:'<30°', encrassement:'moyen', format:'toiture' },
+  opts:{
+    eauChaude:false, eauOsmosee:false, captureEffluents:false, traitementRA:false,
+    nacelle:{active:false, jours:1}, secondOperateur:{active:false, heures:4},
+    urgence24h:false, weekendNuit:false, rapportPDF:false
+  }
+};
+
+function renderDims(){
+  dimsBox.innerHTML='';
+  const s = PRICING.services[state.svcKey];
+  qtyUnitEl.textContent = s.unite.includes('m²') ? 'm²' : (s.unite.includes('kWc')? 'kWc':'site');
+  const coeffs = s.coefficients||{};
+  const frag = document.createDocumentFragment();
+  const groups = Object.keys(coeffs);
+  if(groups.length){
+    const wrapper=document.createElement('div');
+    wrapper.className = groups.length>=3? 'row3':'row';
+    for(const g of groups){
+      const div=document.createElement('div');
+      const lab=document.createElement('label'); lab.textContent=g.charAt(0).toUpperCase()+g.slice(1);
+      const sel=document.createElement('select'); sel.dataset.dim=g;
+      for(const k of Object.keys(coeffs[g])){
+        const opt=document.createElement('option'); opt.value=k; opt.textContent=k; sel.appendChild(opt);
       }
-      case "PV Cleaning":{
-        const sWind=scaleDesc(w.wind_gust_kmh,20,40);
-        const sRain=w.precip_mm===0?100:(w.precip_mm<1?70:5);
-        const mid=(w.tmin+w.tmax)/2; const sT=100-Math.max(0,Math.abs(mid-22)*4);
-        return clamp(0.45*sWind + 0.45*sRain + 0.1*sT);
-      }
-      case "Inspection toiture":{
-        const sWind=scaleDesc(w.wind_gust_kmh,25,50);
-        const sRain=w.precip_mm===0?100:(w.precip_mm<2?60:10);
-        const mid=(w.tmin+w.tmax)/2; const sT=100-Math.max(0,Math.abs(mid-20)*3);
-        return clamp(0.5*sWind + 0.45*sRain + 0.05*sT);
-      }
-      case "Démoussage toiture":{
-        const sWind=scaleDesc(w.wind_gust_kmh,thr.demoussage.windIdealMax,thr.demoussage.windHardMax);
-        const sRain=thr.demoussage.rainStrict?(w.precip_mm===0?100:0):(w.precip_mm===0?100:10);
-        const mid=(w.tmin+w.tmax)/2; const sT=scaleBell(mid,thr.demoussage.tempMin,thr.demoussage.tempMax);
-        return clamp(0.55*sWind + 0.35*sRain + 0.1*sT);
-      }
-      default:return 50;
+      sel.value = state.dims[g] || Object.keys(coeffs[g])[0];
+      sel.oninput=(e)=>{ state.dims[g]=e.target.value; compute(); };
+      div.appendChild(lab); div.appendChild(sel); wrapper.appendChild(div);
     }
+    frag.appendChild(wrapper);
   }
+  dimsBox.appendChild(frag);
+}
 
-  function escapeICS(s){ return s.replace(/\\/g,"\\\\").replace(/\\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;"); }
-
-  let currentMonth=startOfMonth(new Date());
-  let conservative=true, offlineMode=false;
-  let profiles=[...PROFILES]; let activeProfileId=profiles[0].id; let thresholds=JSON.parse(JSON.stringify(profiles[0].thresholds));
-  let locs=[...LOCATIONS]; let selectedLocIds=new Set(locs.map(l=>l.id));
-  let byLocForecast={}, forecastByDate={};
-
-  const grid=document.getElementById("grid"), monthLabel=document.getElementById("monthLabel");
-  const prevBtn=document.getElementById("prevBtn"), nextBtn=document.getElementById("nextBtn"), todayBtn=document.getElementById("todayBtn"), exportBtn=document.getElementById("exportBtn");
-  const statusEl=document.getElementById("status"), profileSelect=document.getElementById("profileSelect"), favInput=document.getElementById("favInput");
-  const conservativeChk=document.getElementById("conservativeChk"), offlineChk=document.getElementById("offlineChk"), locList=document.getElementById("locList"), debugBox=document.getElementById("debugBox");
-
-  function renderProfileSelect(){
-    profileSelect.innerHTML="";
-    for(const p of profiles){ const o=document.createElement("option"); o.value=p.id; o.textContent=p.label; if(p.id===activeProfileId) o.selected=true; profileSelect.appendChild(o); }
-    favInput.value=thresholds.favorableThreshold; conservativeChk.checked=conservative; offlineChk.checked=offlineMode;
+function renderOptions(){
+  optWrap.innerHTML='';
+  const keys = ['eauChaude','eauOsmosee','captureEffluents','traitementRA','rapportPDF','urgence24h','weekendNuit'];
+  for(const key of keys){
+    const o = PRICING.options[key]; if(!o) continue;
+    const div=document.createElement('div'); div.className='opt';
+    const left=document.createElement('div');
+    left.innerHTML=`<div><b>${o.label}</b></div><div class="muted" style="font-size:12px">${o.type==='coef'?`Coefficient ×${o.coef}`:`${€(o.prix)} ${o.type==='flat'?'forfait':''}`}</div>`;
+    const right=document.createElement('input'); right.type='checkbox'; right.checked=!!state.opts[key];
+    right.oninput=(e)=>{ state.opts[key]=e.target.checked; compute(); };
+    div.appendChild(left); div.appendChild(right); optWrap.appendChild(div);
   }
-  function renderLocList(){
-    locList.innerHTML="";
-    for(const l of locs){
-      const row=document.createElement("div"); row.className="loc-row";
-      const chk=document.createElement("input"); chk.type="checkbox"; chk.checked=selectedLocIds.has(l.id);
-      chk.onchange=()=>{ if(chk.checked) selectedLocIds.add(l.id); else selectedLocIds.delete(l.id); refresh(); };
-      row.append(chk, document.createTextNode(" "+l.name+"  ("+l.lat.toFixed(5)+", "+l.lon.toFixed(5)+")"));
-      locList.appendChild(row);
-    }
+  // Nacelle
+  const nac=document.createElement('div'); nac.className='opt';
+  nac.innerHTML=`<div><b>${PRICING.options.nacelle.label}</b><div class="muted" style="font-size:12px">${€(PRICING.options.nacelle.prix)} / jour</div></div>`;
+  const rightN=document.createElement('div'); rightN.style.display='flex'; rightN.style.alignItems='center'; rightN.style.gap='8px';
+  const toggleN=document.createElement('input'); toggleN.type='checkbox'; toggleN.checked=!!state.opts.nacelle.active;
+  const days=document.createElement('input'); days.type='number'; days.min=1; days.value=state.opts.nacelle.jours; days.style.width='80px';
+  toggleN.oninput=(e)=>{ state.opts.nacelle.active=e.target.checked; compute(); };
+  days.oninput=(e)=>{ state.opts.nacelle.jours=Number(e.target.value||1); compute(); };
+  rightN.appendChild(toggleN); rightN.appendChild(days); nac.appendChild(rightN); optWrap.appendChild(nac);
+
+  // Second opérateur
+  const so=document.createElement('div'); so.className='opt';
+  so.innerHTML=`<div><b>${PRICING.options.secondOperateur.label}</b><div class="muted" style="font-size:12px">${€(PRICING.options.secondOperateur.prix)} / heure</div></div>`;
+  const rightS=document.createElement('div'); rightS.style.display='flex'; rightS.style.alignItems='center'; rightS.style.gap='8px';
+  const toggleS=document.createElement('input'); toggleS.type='checkbox'; toggleS.checked=!!state.opts.secondOperateur.active;
+  const hrs=document.createElement('input'); hrs.type='number'; hrs.min=1; hrs.value=state.opts.secondOperateur.heures; hrs.style.width='80px';
+  toggleS.oninput=(e)=>{ state.opts.secondOperateur.active=e.target.checked; compute(); };
+  hrs.oninput=(e)=>{ state.opts.secondOperateur.heures=Number(e.target.value||1); compute(); };
+  rightS.appendChild(toggleS); rightS.appendChild(hrs); so.appendChild(rightS); optWrap.appendChild(so);
+}
+
+function compute(){
+  // Units
+  const svc = PRICING.services[state.svcKey];
+  outCadence.textContent = `${svc.cadence} ${svc.unite.includes('kWc')?'kWc/h':svc.unite.includes('site')?'site/h':'m²/h'}`;
+  kmIncl.textContent = PRICING.deplacement.inclusKmParZone[state.zone]||0;
+  outTVARate.textContent = Math.round((PRICING.tva||0)*100);
+
+  const svcHT = r2(computeServiceHT(state.svcKey, state.qty, state.dims));
+  const depHT = r2(computeDepHT(state.zone, state.km));
+  const {total:optHT, coef, descr} = computeOptionsHT(state.opts);
+  const totalHT = r2((svcHT + depHT + optHT) * coef);
+  const tva = r2(totalHT * PRICING.tva);
+  const ttc = r2(totalHT + tva);
+
+  outServiceHT.textContent = €(svcHT);
+  outDepHT.textContent     = €(depHT);
+  outOptHT.textContent     = €(optHT);
+  outCoef.textContent      = `× ${coef.toFixed(2)}`;
+  outTotalHT.textContent   = €(totalHT);
+  outTVA.textContent       = €(tva);
+  outTotalTTC.textContent  = €(ttc);
+
+  // durée (approx = qty/cadence * produit des coeff)
+  let timeCoef=1; const coeffs = svc.coefficients||{};
+  for(const k of Object.keys(coeffs)){
+    const choice=state.dims[k]; if(choice && coeffs[k][choice]) timeCoef *= coeffs[k][choice];
   }
+  const baseH = (Number(state.qty)||0) / (svc.cadence||1);
+  outDuree.textContent = r2(baseH * timeCoef);
 
-  function daysForGrid(month){
-    const mStart=startOfMonth(month); const mEnd=endOfMonth(mStart);
-    const gStart=startOfWeek(mStart); const gEnd=endOfWeek(mEnd);
-    const days=[]; for(let d=gStart; d<=gEnd; d=addDays(d,1)) days.push(new Date(d)); return days;
+  // Détail
+  let html = '';
+  html += `<div>Prestation : <b>${svc.label}</b></div>`;
+  html += `<div>Quantité : <b>${state.qty}</b> ${svc.unite.includes('kWc')?'kWc':svc.unite.includes('m²')?'m²':'site'}</div>`;
+  for(const k of Object.keys(coeffs)){
+    const val = state.dims[k]; const c = coeffs[k][val]||1;
+    html += `<div>${k} : <b>${val}</b> (coef ${c})</div>`;
   }
-
-  // NEW: union de toutes les dates disponibles sur les lieux actifs
-  function aggregateForecast(activeLocs, byLoc){
-    const keySet=new Set();
-    for(const l of activeLocs){
-      const map=byLoc[l.id]||{};
-      for(const k of Object.keys(map)) keySet.add(k);
-    }
-    const dayKeys=Array.from(keySet).sort(); // YYYY-MM-DD déjà triable lexicographiquement
-    const out={};
-    for(const day of dayKeys){
-      let sw=0,wind=0,rain=0,tmin=0,tmax=0,irr=0,cloud=0;
-      for(const l of activeLocs){
-        const w=(l.weight||1);
-        const d=byLoc[l.id]?.[day];
-        if(!d) continue;
-        sw+=w; wind+=d.wind_gust_kmh*w; rain+=d.precip_mm*w; tmin+=d.tmin*w; tmax+=d.tmax*w; irr+=d.irradiance_wh_m2*w; cloud+=d.cloud_pct*w;
-      }
-      if(sw===0) continue;
-      out[day]={ date:day, wind_gust_kmh:wind/sw, precip_mm:rain/sw, tmin:tmin/sw, tmax:tmax/sw, irradiance_wh_m2:irr/sw, cloud_pct:cloud/sw };
-    }
-    return out;
+  html += `<div>Zone : <b>${state.zone}</b> — ${state.km} km</div>`;
+  if(descr.length){
+    html += `<div>Options : ${descr.map(d=>`<span class="badge" style="margin-right:6px">${d[0]} ${typeof d[1]==='number'?`(${€(d[1])})`:d[1]}</span>`).join('')}</div>`;
   }
+  outDetail.innerHTML = html;
+}
 
-  function buildSynthetic(start,end){
-    const map={}; let i=0;
-    for(let d=start; d<=end; d=addDays(d,1)){
-      const key=formatYMD(d);
-      const base=Math.sin(i/3)*10;
-      const wind=Math.max(5,20+base+(i%5===0?18:0));
-      const rain=(i%7===3?8:(i%11===5?20:0));
-      const tmin=14+Math.cos(i/5)*4;
-      const tmax=26+Math.sin(i/6)*6;
-      const cloud=rain>0?80:30+Math.round(Math.abs(Math.cos(i/4))*40);
-      const irr=Math.max(1000,4500-cloud*20-rain*30);
-      map[key]={date:key, wind_gust_kmh:wind, precip_mm:rain, tmin, tmax, irradiance_wh_m2:irr, cloud_pct:cloud};
-      i++;
-    }
-    return map;
-  }
+// Wire inputs
+serviceSel.oninput = (e)=>{ state.svcKey=e.target.value; renderDims(); compute(); };
+qtyInput.oninput   = (e)=>{ state.qty=Number(e.target.value||0); compute(); };
+zoneSel.oninput    = (e)=>{ state.zone=e.target.value; compute(); };
+kmInput.oninput    = (e)=>{ state.km=Number(e.target.value||0); compute(); };
 
-  async function fetchOpenMeteoChunk(lat,lon,start,end){
-    const url=new URL("https://api.open-meteo.com/v1/forecast");
-    url.searchParams.set("latitude",String(lat));
-    url.searchParams.set("longitude",String(lon));
-    url.searchParams.set("daily","precipitation_sum,rain_sum,wind_gusts_10m_max,temperature_2m_max,temperature_2m_min,cloudcover_mean,shortwave_radiation_sum");
-    url.searchParams.set("timezone","Europe/Paris");
-    url.searchParams.set("start_date",start);
-    url.searchParams.set("end_date",end);
-    debugBox.style.display="block"; debugBox.textContent += `GET ${url.toString()}\n`;
-    const res=await fetch(url.toString()).catch(err=>({ok:false,status:0,statusText:String(err)}));
-    if(!res.ok){ debugBox.textContent += ` -> ${res.status} ${res.statusText}\n`; throw new Error(`Open-Meteo ${res.status}`); }
-    const data=await res.json();
-    const t=data.daily.time; const wind=data.daily.wind_gusts_10m_max||data.daily.windgusts_10m_max;
-    const precip=(data.daily.rain_sum||data.daily.precipitation_sum);
-    const tmax=data.daily.temperature_2m_max; const tmin=data.daily.temperature_2m_min;
-    const cloud=data.daily.cloudcover_mean; const rad=data.daily.shortwave_radiation_sum; // MJ/m²
-    const map={};
-    for(let i=0;i<t.length;i++){
-      const wv=Number(wind?.[i] ?? 0) || 0;
-      const pv=Number(precip?.[i] ?? 0) || 0;
-      const tminv=Number(tmin?.[i] ?? 0) || 0;
-      const tmaxv=Number(tmax?.[i] ?? 0) || 0;
-      const cloudv=Number(cloud?.[i] ?? 0) || 0;
-      const radv=Number(rad?.[i] ?? 0) || 0;
-      map[t[i]]={
-        date:t[i],
-        wind_gust_kmh:wv,
-        precip_mm:pv,
-        tmin:tminv,
-        tmax:tmaxv,
-        cloud_pct:cloudv,
-        irradiance_wh_m2:(radv*277.78)||0
-      };
-    }
-    return map;
-  }
+resetBtn.onclick = ()=>{
+  serviceSel.value='facadesHP'; state.svcKey='facadesHP';
+  qtyInput.value=100; state.qty=100;
+  zoneSel.value='Z1'; state.zone='Z1';
+  kmInput.value=10; state.km=10;
+  state.dims={ hauteur:'<10m', complexite:'simple', pente:'<30°', encrassement:'moyen', format:'toiture' };
+  state.opts={ eauChaude:false, eauOsmosee:false, captureEffluents:false, traitementRA:false, nacelle:{active:false, jours:1}, secondOperateur:{active:false, heures:4}, urgence24h:false, weekendNuit:false, rapportPDF:false };
+  renderDims(); renderOptions(); compute();
+};
 
-  async function fetchOpenMeteoRanged(lat,lon,rangeStart,rangeEnd){
-    const maxSpan=16; const out={};
-    const today=new Date(); today.setHours(0,0,0,0);
-    let cur=new Date(rangeStart<today?today:rangeStart);
-    if(cur>rangeEnd) return out;
-    while(cur<=rangeEnd){
-      const segStart=new Date(cur);
-      const segEnd=addDays(segStart,maxSpan-1);
-      const endSeg=segEnd<rangeEnd?segEnd:new Date(rangeEnd);
-      const s=formatYMD(segStart), e=formatYMD(endSeg);
-      const chunk=await fetchOpenMeteoChunk(lat,lon,s,e);
-      Object.assign(out,chunk);
-      cur=addDays(endSeg,1);
-    }
-    return out;
-  }
-
-  async function refresh(fetchNow=true){
-    monthLabel.textContent=formatMonthFR(currentMonth);
-    const days=daysForGrid(currentMonth);
-    grid.innerHTML="";
-    for(const d of days){
-      const cell=document.createElement("div"); cell.className="cell"; if(!isSameMonth(d,currentMonth)) cell.classList.add("muted");
-      const top=document.createElement("div"); top.className="row"; top.style.justifyContent='space-between';
-      const dayEl=document.createElement("div"); dayEl.className="day"; dayEl.textContent=d.getDate(); top.append(dayEl);
-      if(isSameDay(d,new Date())){ const b=document.createElement("span"); b.className="badge"; b.textContent="Aujourd'hui"; top.append(b); }
-      cell.append(top);
-      const info=document.createElement("div"); info.className="muted"; info.style.fontSize="11px"; info.style.marginTop="6px"; info.textContent="Météo…"; cell.append(info); grid.append(cell);
-    }
-    const gStart=startOfWeek(startOfMonth(currentMonth)); const gEnd=endOfWeek(endOfMonth(currentMonth));
-    statusEl.textContent=offlineMode?"Mode hors‑ligne (simulé)":"Chargement météo…";
-
-    if(fetchNow){
-      byLocForecast={}; const activeLocs=locs.filter(l=>selectedLocIds.has(l.id));
-      for(const l of activeLocs){
-        try{ byLocForecast[l.id]=offlineMode?buildSynthetic(gStart,gEnd):await fetchOpenMeteoRanged(l.lat,l.lon,gStart,gEnd); }
-        catch(e){ byLocForecast[l.id]={}; debugBox.style.display="block"; debugBox.textContent += `Lieu: ${l.name} — ${e.message}\n`; }
-      }
-    }
-
-    const activeLocs=locs.filter(l=>selectedLocIds.has(l.id));
-    forecastByDate=aggregateForecast(activeLocs,byLocForecast);
-
-    const dayCells=grid.children;
-    for(let i=0;i<dayCells.length;i++){
-      const cell=dayCells[i]; const d=addDays(startOfWeek(startOfMonth(currentMonth)),i); const key=formatYMD(d); const wx=forecastByDate[key]; const info=cell.querySelector(".muted");
-      if(!wx){ info.textContent="Météo indisponible"; continue; }
-      const perType=TYPES.map(t=>scoreForType(t,wx,thresholds)); const agg=conservative?Math.min(...perType):avg(perType);
-      cell.style.background=hslFromScore(agg);
-      const label=agg>=thresholds.favorableThreshold?"Favorable":(agg>=45?"Limite":"Défavorable");
-      info.textContent=`${label} · vent ${Math.round(wx.wind_gust_kmh)} km/h · pluie ${wx.precip_mm.toFixed(1)} mm · T° ${Math.round(wx.tmin)}–${Math.round(wx.tmax)}°C`;
-    }
-    statusEl.textContent="OK";
-    if(debugBox) { debugBox.style.display='block'; debugBox.textContent += `Agrégé ${Object.keys(forecastByDate).length} jours.\\n`; }
-  }
-
-  function exportICS(){
-    const days=daysForGrid(currentMonth);
-    let lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//CDC Drone//Meteo Window//FR","CALSCALE:GREGORIAN"];
-    for(const d of days){
-      const key=formatYMD(d); const wx=forecastByDate[key]; if(!wx) continue;
-      const perType=TYPES.map(t=>scoreForType(t,wx,thresholds)); const score=conservative?Math.min(...perType):avg(perType);
-      if(score>=thresholds.favorableThreshold){
-        const dt=formatICS(d);
-        const summary=`Fenêtre météo favorable (${Math.round(score)})`;
-        const desc=`Vent rafales ${Math.round(wx.wind_gust_kmh)} km/h; pluie ${wx.precip_mm.toFixed(1)} mm; T° ${Math.round(wx.tmin)}–${Math.round(wx.tmax)}°C; nébulosité ${Math.round(wx.cloud_pct)}%; irr ${Math.round(wx.irradiance_wh_m2)} Wh/m².`;
-        lines.push("BEGIN:VEVENT",
-          `DTSTART;VALUE=DATE:${dt}`,
-          `DTEND;VALUE=DATE:${formatICS(addDays(d,1))}`,
-          `UID:${dt}-meteo-cdc@local`,
-          `SUMMARY:${escapeICS(summary)}`,
-          `DESCRIPTION:${escapeICS(desc)}`,
-          "END:VEVENT");
-      }
-    }
-    lines.push("END:VCALENDAR");
-    const blob=new Blob([lines.join("\\r\\n")],{type:"text/calendar;charset=utf-8"});
-    const url=URL.createObjectURL(blob); const a=document.createElement("a");
-    a.href=url; a.download=`fenetres_meteo_${currentMonth.getFullYear()}_${String(currentMonth.getMonth()+1).padStart(2,'0')}.ics`;
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  }
-
-  prevBtn.onclick=()=>{ currentMonth=subMonths(currentMonth,1); refresh(); };
-  nextBtn.onclick=()=>{ currentMonth=addMonths(currentMonth,1); refresh(); };
-  todayBtn.onclick=()=>{ currentMonth=startOfMonth(new Date()); refresh(); };
-  exportBtn.onclick=exportICS;
-  profileSelect.onchange=()=>{
-    activeProfileId=profileSelect.value;
-    const p=PROFILES.find(x=>x.id===activeProfileId);
-    thresholds=JSON.parse(JSON.stringify(p.thresholds));
-    favInput.value=thresholds.favorableThreshold;
-    refresh(false);
-  };
-  favInput.onchange=()=>{ thresholds.favorableThreshold=Number(favInput.value); refresh(false); };
-  conservativeChk.onchange=()=>{ conservative=conservativeChk.checked; refresh(false); };
-  offlineChk.onchange=()=>{ offlineMode=offlineChk.checked; refresh(); };
-
-  function init(){ renderProfileSelect(); renderLocList(); refresh(); }
-  init();
-  </script>
+renderDims(); renderOptions(); compute();
+</script>
 </body>
 </html>
