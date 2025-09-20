@@ -11,126 +11,42 @@
       --texte: #333;
       --fond: #fff;
     }
-    body {
-      margin:0; padding:0;
-      font-family:sans-serif;
-      color: var(--texte);
-      background: var(--fond);
-    }
-    header {
-      position:fixed; top:0; left:0; right:0;
-      background: var(--bleu);
-      color:#fff;
-      padding:10px 20px;
-      display:flex; align-items:center; justify-content:space-between;
-      z-index:1000;
-    }
+    body { margin:0; padding:0; font-family:sans-serif; color: var(--texte); background: var(--fond); }
+    header { position:fixed; top:0; left:0; right:0; background: var(--bleu); color:#fff; padding:10px 20px; display:flex; align-items:center; justify-content:space-between; z-index:1000; }
     header .logo { font-size:1.5em; font-weight:bold; }
     header .coords { font-size:0.9em; }
-    header button {
-      margin-left:10px; padding:6px 12px;
-      border:none; background: var(--orange);
-      color:#fff; cursor:pointer;
-    }
-    main {
-      display:flex;
-      margin-top:80px;
-      padding:20px;
-    }
+    header button { margin-left:10px; padding:6px 12px; border:none; background: var(--orange); color:#fff; cursor:pointer; }
+    main { display:flex; margin-top:80px; padding:20px; }
     .col-gauche { flex:2; padding-right:20px; }
-    .col-droite {
-      flex:1; border-left:1px solid #ccc;
-      padding-left:20px;
-      position:sticky; top:80px;
-      height: calc(100vh - 100px);
-      overflow:auto;
-    }
-    section {
-      margin-bottom:15px;
-      border:1px solid #ccc;
-      border-radius:4px;
-    }
-    section h2 {
-      margin:0; padding:10px;
-      background: var(--gris-clair);
-      cursor:pointer;
-    }
-    section .content {
-      padding:10px; display:none;
-    }
+    .col-droite { flex:1; border-left:1px solid #ccc; padding-left:20px; position:sticky; top:80px; height: calc(100vh - 100px); overflow:auto; }
+    section { margin-bottom:15px; border:1px solid #ccc; border-radius:4px; }
+    section h2 { margin:0; padding:10px; background: var(--gris-clair); cursor:pointer; }
+    section .content { padding:10px; display:none; }
     section.open .content { display:block; }
     label { display:block; margin-bottom:8px; }
-    input[type="text"], input[type="number"], input[type="email"], select, textarea {
-      width:100%; padding:4px; box-sizing:border-box;
-      border:1px solid #aaa; border-radius:3px;
-    }
-    table {
-      width:100%; border-collapse:collapse; font-size:0.9em;
-    }
-    th, td {
-      border:1px solid #aaa; padding:6px;
-    }
+    input[type="text"], input[type="number"], input[type="email"], select, textarea { width:100%; padding:4px; box-sizing:border-box; border:1px solid #aaa; border-radius:3px; }
+    table { width:100%; border-collapse:collapse; font-size:0.9em; }
+    th, td { border:1px solid #aaa; padding:6px; }
     th { background: var(--gris-clair); }
-    .btn-small {
-      padding:4px 8px; font-size:0.8em; cursor:pointer;
-      margin-left:2px;
-    }
+    .btn-small { padding:4px 8px; font-size:0.8em; cursor:pointer; margin-left:2px; }
     .tooltip { position:relative; }
-    .tooltip:hover::after {
-      content: attr(data-desc);
-      position:absolute; left:0; top:100%;
-      background:#222; color:#fff; padding:4px 8px;
-      font-size:0.8em; white-space:nowrap; z-index:100;
-      border-radius:3px;
-    }
-    .slide-over {
-      position:fixed; top:0; right:-100%;
-      width:360px; max-width:90%; height:100%;
-      background:#fff; box-shadow:-2px 0 5px rgba(0,0,0,0.3);
-      transition:right 0.3s;
-      padding:20px; overflow-y:auto; z-index:2000;
-    }
+    .tooltip:hover::after { content: attr(data-desc); position:absolute; left:0; top:100%; background:#222; color:#fff; padding:4px 8px; font-size:0.8em; white-space:nowrap; z-index:100; border-radius:3px; }
+    .slide-over { position:fixed; top:0; right:-100%; width:360px; max-width:90%; height:100%; background:#fff; box-shadow:-2px 0 5px rgba(0,0,0,0.3); transition:right 0.3s; padding:20px; overflow-y:auto; z-index:2000; }
     .slide-over.open { right:0; }
     .totaux div { margin-bottom:8px; }
-    .alerte-vent {
-      background:#ffcccc; color:#900;
-      padding:10px; margin-bottom:10px;
-      border:1px solid #900; display:none;
-    }
-    .modal {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      background:rgba(0,0,0,0.5);
-      display:none; align-items:center; justify-content:center;
-      z-index:3000;
-    }
+    .modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:3000; }
     .modal.open { display:flex; }
-    .modal .dialog {
-      background:#fff; padding:20px;
-      max-width:700px; width:100%; max-height:90%;
-      overflow-y:auto; border-radius:5px;
-    }
+    .modal .dialog { background:#fff; padding:20px; max-width:700px; width:100%; max-height:90%; overflow-y:auto; border-radius:5px; }
     .tabs { display:flex; border-bottom:1px solid #ccc; }
-    .tabs button {
-      padding:8px 12px; border:none; background:none; cursor:pointer;
-    }
-    .tabs button.active {
-      border-bottom:2px solid var(--bleu); font-weight:bold;
-    }
+    .tabs button { padding:8px 12px; border:none; background:none; cursor:pointer; }
+    .tabs button.active { border-bottom:2px solid var(--bleu); font-weight:bold; }
     .tab-content { display:none; padding-top:10px; }
     .tab-content.active { display:block; }
-    #toaster {
-      position:fixed; bottom:20px; right:20px;
-      background:#333; color:#fff;
-      padding:10px 15px; border-radius:4px;
-      opacity:0; transition:opacity 0.5s;
-      z-index:4000;
-    }
+    #toaster { position:fixed; bottom:20px; right:20px; background:#333; color:#fff; padding:10px 15px; border-radius:4px; opacity:0; transition:opacity 0.5s; z-index:4000; }
     #toaster.show { opacity:1; }
     .error { border-color:red; }
     @media print {
-      header button, header .coords, .slide-over, .modal, .tabs,
-      section h2, section .content input, section .content select,
-      .btn-small { display:none !important; }
+      header button, header .coords, .slide-over, .modal, .tabs, section h2, section .content input, section .content select, .btn-small { display:none !important; }
       header { position:static; }
       body { margin:0; padding:15mm; }
       main { display:block; }
@@ -149,26 +65,7 @@
   </header>
   <main>
     <div class="col-gauche">
-      <div class="alerte-vent" id="alerteVent"></div>
-
-      <!-- Météo & Mission -->
-      <section id="sec-meteo">
-        <h2>Type de mission & météo</h2>
-        <div class="content">
-          <label>Type de mission:
-            <select id="missionType">
-              <option value="nettoyage">Nettoyage façades/toitures</option>
-              <option value="pv-nettoyage">Nettoyage PV</option>
-              <option value="inspection">Inspection</option>
-              <option value="thermoPv">Thermo PV</option>
-            </select>
-          </label>
-          <label>Vitesse du vent (km/h):
-            <input type="number" id="vent" min="0" />
-          </label>
-        </div>
-      </section>
-
+      <!-- Section Client -->
       <section id="sec-client">
         <h2>Client</h2>
         <div class="content">
@@ -179,6 +76,7 @@
         </div>
       </section>
 
+      <!-- Prestations (lignes) -->
       <section id="sec-prestations">
         <h2>Prestations (lignes)</h2>
         <div class="content">
@@ -189,6 +87,7 @@
         </div>
       </section>
 
+      <!-- Add-ons globaux -->
       <section id="sec-addons">
         <h2>Add‑ons</h2>
         <div class="content">
@@ -196,6 +95,7 @@
         </div>
       </section>
 
+      <!-- Déplacement -->
       <section id="sec-deplacement">
         <h2>Déplacement</h2>
         <div class="content">
@@ -203,6 +103,7 @@
         </div>
       </section>
 
+      <!-- Remise globale -->
       <section id="sec-remise">
         <h2>Remise globale (%)</h2>
         <div class="content">
@@ -210,6 +111,7 @@
         </div>
       </section>
 
+      <!-- Validation & Envoi -->
       <section id="sec-validation">
         <h2>Validation & Envoi</h2>
         <div class="content">
@@ -219,7 +121,6 @@
         </div>
       </section>
     </div>
-
     <div class="col-droite">
       <div class="totaux">
         <div>Devis N° : <span id="devis-numero">—</span></div>
@@ -239,9 +140,7 @@
   <div class="slide-over" id="panel-line">
     <h3 id="panel-title">Nouvelle ligne</h3>
     <form id="form-line">
-      <label>Prestation:
-        <select id="line-service"></select>
-      </label>
+      <label>Prestation:<select id="line-service"></select></label>
       <label>Qté:<input type="number" id="line-qte" min="0" step="any" /></label>
       <label>Unité:<input type="text" id="line-unite" /></label>
       <label>PU:<input type="number" id="line-pu" min="0" step="any" /></label>
@@ -259,12 +158,11 @@
       <label>Mot de passe:<input type="password" id="admin-pass" /></label>
       <button id="btn-admin-login">Se connecter</button>
       <button id="btn-admin-cancel">Annuler</button>
-      <div id="admin-content">
+      <div id="admin-content" style="display:none;">
         <div class="tabs">
           <button data-tab="prestations" class="active">Prestations</button>
           <button data-tab="addons">Add‑ons</button>
           <button data-tab="deplacement">Déplacement</button>
-          <button data-tab="meteo">Météo</button>
           <button data-tab="mentions">Mentions PDF</button>
           <button data-tab="identite">Identité</button>
           <button data-tab="maintenance">Maintenance</button>
@@ -274,7 +172,6 @@
         <div class="tab-content" id="tab-deplacement">
           <label>Forfait Hors 34‑30:<input type="number" id="admin-forfait-h3430" min="0" step="any" /></label>
         </div>
-        <div class="tab-content" id="tab-meteo"><div id="admin-seuils"></div></div>
         <div class="tab-content" id="tab-mentions">
           <textarea id="admin-mentions" rows="4" style="width:100%"></textarea>
         </div>
@@ -300,7 +197,7 @@
   <div id="toaster"></div>
 
   <script>
-    // --- Modèles & persistance
+    // ‒ Modèles & persistance
     const DEFAULT_SERVICES = [
       {id:"s1",label:"Nettoyage toitures",unite:"m²",pu:9.50,min:520,cadence:55,desc:"Démoussage/anti‑lichens, rinçage maîtrisé."},
       {id:"s2",label:"Façades (softwash)",unite:"m²",pu:8.00,min:480,cadence:60,desc:"Solution douce, rinçage basse pression."},
@@ -318,74 +215,61 @@
     const DEFAULT_CONFIG = {
       colors:{blue:"#1778F2",orange:"#FF7A00"},
       tva:20, remisePct:0, forfaitHors3430:100,
-      seuilsVent:{thermoPv:20,inspection:30,pv:25,nettoyages:35},
-      motifsVent:{
-        thermoPv:"Thermo PV sensible au vent.",inspection:"Sécurité : vent trop fort.",
-        pv:"Nettoyage PV non recommandé par vent fort.",
-        nettoyages:"Opérations extérieures difficiles par vent."
-      },
-      mentionsPdf:"Interventions dépendantes des conditions météo (...). En cas d’annulation météo, reprogrammation rapide garantie.",
+      mentionsPdf:"Interventions dépendantes des conditions météo. En cas d’annulation météo, reprogrammation rapide garantie.",
       company:{name:"CDC Cleaner Drone Crew",siren:"123456789",address:"Adresse société",email:"contact@cdc.com",phone:"0000000000",iban:"FR76...",cgvUrl:"https://cdc.example.com/cgv"}
     };
 
-    let services, addons, config, devis;
-    let devisCounter;
+    let services, addons, config, devis, devisCounter;
 
-    function lsGet(key, def) {
-      let v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : def;
-    }
-    function lsSet(key, val) {
-      localStorage.setItem(key, JSON.stringify(val));
-    }
+    function lsGet(k, d){ let v=localStorage.getItem(k); return v?JSON.parse(v):d; }
+    function lsSet(k, v){ localStorage.setItem(k,JSON.stringify(v)); }
 
-    function initModels() {
+    function initModels(){
       services = lsGet("cdc_services", DEFAULT_SERVICES);
       addons = lsGet("cdc_addons", DEFAULT_ADDONS);
       config = lsGet("cdc_config", DEFAULT_CONFIG);
       devis = lsGet("cdc_devis", {numero:"",dateISO:"",client:{name:"",email:"",phone:"",address:""},lignes:[],hors3430:false,totalHT:0,remise:0,tva:0,totalTTC:0,acompte:0,resteDu:0});
       devisCounter = parseInt(localStorage.getItem("cdc_devis_counter")||"0",10);
     }
-    function saveModels() {
+    function saveModels(){
       lsSet("cdc_services",services);
       lsSet("cdc_addons",addons);
       lsSet("cdc_config",config);
       lsSet("cdc_devis",devis);
       localStorage.setItem("cdc_devis_counter",devisCounter);
     }
-    function genNumero() {
-      if (!devis.numero) {
+    function genNumero(){
+      if (!devis.numero){
         let d = new Date();
-        let yyyy = d.getFullYear();
-        let mm = String(d.getMonth()+1).padStart(2,"0");
-        let dd = String(d.getDate()).padStart(2,"0");
+        let yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
         devisCounter++;
         localStorage.setItem("cdc_devis_counter",devisCounter);
         devis.numero = `CDC-${yyyy}${mm}${dd}-${String(devisCounter).padStart(3,"0")}`;
       }
     }
+    function round2(x){ return Math.round((x+Number.EPSILON)*100)/100; }
 
-    function round2(x) { return Math.round((x+Number.EPSILON)*100)/100; }
-
-    function calc() {
-      let sumLignes = 0;
-      devis.lignes.forEach(l => {
+    function calc(){
+      let sum=0;
+      devis.lignes.forEach(l=>{
         let s = services.find(sv=>sv.id===l.serviceId);
         if (!s) return;
-        let base = (l.qte || 0) * l.pu;
-        let ht = Math.max(base, l.min || 0);
+        let base = (l.qte||0) * l.pu;
+        let ht = Math.max(base, l.min||0);
         let addonsSum = 0;
-        l.addons.forEach(ad => { if (!ad.offert) addonsSum += ad.pu; });
+        l.addons.forEach(ad=>{
+          if (!ad.offert) addonsSum += ad.pu;
+        });
         ht += addonsSum;
         l._ht = ht;
-        sumLignes += ht;
+        sum += ht;
       });
-      let total = sumLignes;
+      let total = sum;
       if (devis.hors3430) total += config.forfaitHors3430;
       let remiseVal = total * (config.remisePct/100);
-      let apres = total - remiseVal;
-      let tva = apres * (config.tva/100);
-      let ttc = apres + tva;
+      let after = total - remiseVal;
+      let tva = after * (config.tva/100);
+      let ttc = after + tva;
       devis.totalHT = round2(total);
       devis.remise = round2(remiseVal);
       devis.tva = round2(tva);
@@ -394,88 +278,137 @@
       devis.resteDu = round2(ttc - devis.acompte);
     }
 
-    function renderSections() {
-      ["sec-meteo","sec-client","sec-prestations","sec-addons","sec-deplacement","sec-remise","sec-validation"]
-        .forEach(id => {
-          let sec = document.getElementById(id);
-          let h = sec.querySelector("h2");
-          h.onclick = ()=> { sec.classList.toggle("open"); };
-        });
+    function renderSections(){
+      ["sec-client","sec-prestations","sec-addons","sec-deplacement","sec-remise","sec-validation"].forEach(id=>{
+        let sec = document.getElementById(id);
+        let h = sec.querySelector("h2");
+        h.onclick = ()=> sec.classList.toggle("open");
+      });
     }
 
-    function renderServiceOpts() {
+    function renderServiceOpts(){
       let sel = document.getElementById("line-service");
       sel.innerHTML = "";
-      services.forEach(s=>{ let o=document.createElement("option"); o.value=s.id; o.textContent=s.label; sel.append(o); });
+      services.forEach(s=>{
+        let o = document.createElement("option");
+        o.value = s.id;
+        o.textContent = s.label;
+        sel.append(o);
+      });
     }
 
-    function renderLines() {
+    function renderAddonsForLine(line){
+      let container = document.getElementById("addons-for-line");
+      container.innerHTML = "";
+      let serviceId = line ? line.serviceId : document.getElementById("line-service").value;
+      let s = services.find(sv=>sv.id === serviceId);
+      addons.forEach(ad=>{
+        // Vérifier applicabilité
+        let appl = ad.appliesTo || ["all"];
+        let ok = appl.includes("all") ||
+          (s && appl.includes("nettoyage") && s.label.toLowerCase().includes("nettoyage")) ||
+          (s && appl.includes("pv") && s.label.toLowerCase().includes("pv")) ||
+          (s && appl.includes("facade") && s.label.toLowerCase().includes("façade")) ||
+          (s && appl.includes("toiture") && s.label.toLowerCase().includes("toiture"));
+        if (!ok) return;
+        let cb = document.createElement("input");
+        cb.type = "checkbox"; cb.id = "adcb_"+ad.id;
+        let checked = false, offert = false;
+        if (line){
+          let la = line.addons.find(x=>x.addonId === ad.id);
+          if (la){
+            checked = true;
+            offert = la.offert;
+          }
+        }
+        cb.checked = checked;
+        let lbl = document.createElement("label");
+        lbl.textContent = `${ad.label} (${ad.pu.toFixed(2)} €)`;
+        lbl.prepend(cb);
+        let off = document.createElement("input");
+        off.type = "checkbox"; off.id = "adoff_"+ad.id;
+        off.checked = offert;
+        let loff = document.createElement("label");
+        loff.textContent = " Offert";
+        loff.prepend(off);
+        container.append(lbl);
+        container.append(loff);
+        container.append(document.createElement("br"));
+      });
+    }
+
+    function renderLines(){
       let tbody = document.querySelector("#table-lignes tbody");
       tbody.innerHTML = "";
       devis.lignes.forEach(l=>{
         let s = services.find(sv=>sv.id===l.serviceId);
         let tr = document.createElement("tr");
         let td0 = document.createElement("td");
-        td0.textContent = s.label;
+        td0.textContent = s ? s.label : "";
         td0.classList.add("tooltip");
-        td0.setAttribute("data-desc", s.desc);
+        td0.setAttribute("data-desc", s ? s.desc : "");
         tr.append(td0);
-        ["qte","unite","pu","min"].forEach(f=>{
-          let td=document.createElement("td");
-          td.textContent = f==="pu"||f==="min" ? (l[f]||0).toFixed(2) : l[f];
-          tr.append(td);
-        });
-        let tdH = document.createElement("td");
-        tdH.textContent = l.hors3430 ? "Oui":"Non";
-        tr.append(tdH);
-        let td_HT = document.createElement("td");
-        td_HT.textContent = (l._ht||0).toFixed(2);
-        tr.append(td_HT);
-        let tdA = document.createElement("td");
+        let td1 = document.createElement("td");
+        td1.textContent = l.qte;
+        tr.append(td1);
+        let td2 = document.createElement("td");
+        td2.textContent = l.unite;
+        tr.append(td2);
+        let td3 = document.createElement("td");
+        td3.textContent = (l.pu||0).toFixed(2);
+        tr.append(td3);
+        let td4 = document.createElement("td");
+        td4.textContent = (l.min||0).toFixed(2);
+        tr.append(td4);
+        let td5 = document.createElement("td");
+        td5.textContent = l.hors3430 ? "Oui":"Non";
+        tr.append(td5);
+        let td6 = document.createElement("td");
+        td6.textContent = (l._ht||0).toFixed(2);
+        tr.append(td6);
+        let td7 = document.createElement("td");
         let btnE = document.createElement("button"); btnE.textContent="✏️"; btnE.classList.add("btn-small");
         btnE.onclick = ()=> openLine(l.id);
-        tdA.append(btnE);
-        let btnDup=document.createElement("button"); btnDup.textContent="📄"; btnDup.classList.add("btn-small");
-        btnDup.onclick = ()=> duplicateLine(l.id);
-        tdA.append(btnDup);
-        let btnDel=document.createElement("button"); btnDel.textContent="🗑"; btnDel.classList.add("btn-small");
+        td7.append(btnE);
+        let btnDup = document.createElement("button"); btnDup.textContent="📄"; btnDup.classList.add("btn-small");
+        btnDup.onclick = ()=> { duplicateLine(l.id); };
+        td7.append(btnDup);
+        let btnDel = document.createElement("button"); btnDel.textContent="🗑"; btnDel.classList.add("btn-small");
         btnDel.onclick = ()=> { deleteLine(l.id); };
-        tdA.append(btnDel);
-        tr.append(tdA);
+        td7.append(btnDel);
+        tr.append(td7);
         tbody.append(tr);
       });
     }
 
-    function refresh() {
+    function refresh(){
       genNumero();
       renderServiceOpts();
       calc();
       renderLines();
       renderTotals();
-      checkVent();
       saveModels();
     }
 
-    function renderTotals() {
+    function renderTotals(){
       document.getElementById("devis-numero").textContent = devis.numero;
-      document.getElementById("totalHT").textContent = devis.totalHT.toFixed(2)+" €";
+      document.getElementById("totalHT").textContent = (devis.totalHT||0).toFixed(2)+" €";
       document.getElementById("remise-val").textContent = (devis.remise||0).toFixed(2)+" €";
-      document.getElementById("tva-val").textContent = devis.tva.toFixed(2)+" €";
-      document.getElementById("totalTTC").textContent = devis.totalTTC.toFixed(2)+" €";
-      document.getElementById("acompte").textContent = devis.acompte.toFixed(2)+" €";
-      document.getElementById("reste").textContent = devis.resteDu.toFixed(2)+" €";
+      document.getElementById("tva-val").textContent = (devis.tva||0).toFixed(2)+" €";
+      document.getElementById("totalTTC").textContent = (devis.totalTTC||0).toFixed(2)+" €";
+      document.getElementById("acompte").textContent = (devis.acompte||0).toFixed(2)+" €";
+      document.getElementById("reste").textContent = (devis.resteDu||0).toFixed(2)+" €";
       document.getElementById("footer-deplacement").style.display = devis.hors3430 ? "block":"none";
     }
 
-    // Ligne gestion
-    function openLine(id) {
+    function openLine(id){
       let panel = document.getElementById("panel-line");
       panel.classList.add("open");
       let form = document.getElementById("form-line");
       form.dataset.edit = id||"";
       let l = devis.lignes.find(x=>x.id===id);
       renderServiceOpts();
-      if (l) {
+      if (l){
         document.getElementById("line-service").value = l.serviceId;
         document.getElementById("line-qte").value = l.qte;
         document.getElementById("line-unite").value = l.unite;
@@ -490,9 +423,27 @@
         document.getElementById("line-min").value = services[0].min;
         document.getElementById("line-hors3430").checked = false;
       }
+      renderAddonsForLine(l);
+      document.getElementById("line-qte").focus();
     }
 
-    function closeLine() { document.getElementById("panel-line").classList.remove("open"); }
+    function closeLine(){ document.getElementById("panel-line").classList.remove("open"); }
+
+    function deleteLine(id){
+      devis.lignes = devis.lignes.filter(l=>l.id!==id);
+      refresh();
+      showToast("Ligne supprimée");
+    }
+
+    function duplicateLine(id){
+      let orig = devis.lignes.find(l=>l.id===id);
+      if (!orig) return;
+      let copy = JSON.parse(JSON.stringify(orig));
+      copy.id = "l_"+Date.now();
+      devis.lignes.push(copy);
+      refresh();
+      showToast("Ligne dupliquée");
+    }
 
     document.getElementById("btn-add-line").onclick = ()=> openLine("");
     document.getElementById("btn-cancel-line").onclick = closeLine;
@@ -501,26 +452,39 @@
       let id = this.dataset.edit;
       let serviceId = document.getElementById("line-service").value;
       let qte = parseFloat(document.getElementById("line-qte").value);
-      if (!qte || qte<=0) { alert("Quantité invalide"); return; }
+      if (!qte || qte <= 0){ alert("Quantité invalide"); return; }
       let unite = document.getElementById("line-unite").value;
       let pu = parseFloat(document.getElementById("line-pu").value);
       let min = parseFloat(document.getElementById("line-min").value);
       let hors = document.getElementById("line-hors3430").checked;
-      let lad = [];
+      let lineAddons = [];
       addons.forEach(ad=>{
-        // simplifié : pas les total add-ons par ligne ici
+        let cb = document.getElementById("adcb_"+ad.id);
+        if (cb){
+          if (cb.checked){
+            let offert = (document.getElementById("adoff_"+ad.id) && document.getElementById("adoff_"+ad.id).checked) ? true : false;
+            lineAddons.push({ addonId: ad.id, offert: offert, pu: ad.pu });
+          }
+        }
       });
-      if (id) {
-        let l=devis.lignes.find(x=>x.id===id);
-        l.serviceId=serviceId; l.qte=qte; l.unite=unite; l.pu=pu; l.min=min; l.hors3430=hors;
+      if (id){
+        let l = devis.lignes.find(l=>l.id===id);
+        l.serviceId = serviceId;
+        l.qte = qte;
+        l.unite = unite;
+        l.pu = pu;
+        l.min = min;
+        l.hors3430 = hors;
+        l.addons = lineAddons;
       } else {
-        devis.lignes.push({id:"l_"+Date.now(),serviceId, qte, unite, pu, min, hors, addons:[]});
+        devis.lignes.push({ id:"l_"+Date.now(), serviceId, qte, unite, pu, min, hors, addons: lineAddons });
       }
       closeLine();
       refresh();
       showToast("Ligne sauvegardée");
     };
-    document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeLine(); });
+    document.addEventListener("keydown", e=>{ if (e.key==="Escape") closeLine(); });
+
     document.getElementById("remisePct").oninput = e=>{
       config.remisePct = parseFloat(e.target.value)||0;
       refresh();
@@ -529,81 +493,140 @@
       devis.hors3430 = e.target.checked;
       refresh();
     };
-    document.getElementById("missionType").onchange = checkVent;
-    document.getElementById("vent").oninput = checkVent;
+
     document.getElementById("btn-download").onclick = ()=> window.print();
     document.getElementById("btn-email").onclick = function(){
-      if (!/\S+@\S+\.\S+/.test(devis.client.email || document.getElementById("client-email").value)) { alert("Email invalide"); return; }
-      if (!document.getElementById("rgpd").checked) { alert("Vous devez accepter le RGPD"); return; }
+      let mail = document.getElementById("client-email").value;
+      if (!/\S+@\S+\.\S+/.test(mail)){ alert("Email invalide"); return; }
+      if (!document.getElementById("rgpd").checked){ alert("Vous devez accepter le RGPD"); return; }
       let subj = encodeURIComponent("Devis CDC — "+devis.numero);
       let body = `Devis N°: ${devis.numero}\nTotal TTC: ${devis.totalTTC.toFixed(2)} €\nAcompte: ${devis.acompte.toFixed(2)} €\nReste dû: ${devis.resteDu.toFixed(2)} €`;
-      let mailto = `mailto:${document.getElementById("client-email").value}?subject=${subj}&body=${encodeURIComponent(body)}&cc=nicolas.gadea.pro@gmail.com`;
+      let mailto = `mailto:${mail}?subject=${subj}&body=${encodeURIComponent(body)}&cc=nicolas.gadea.pro@gmail.com`;
       window.location.href = mailto;
     };
+
     document.getElementById("btn-new").onclick = function(){
-      if (confirm("Nouveau devis : effacer le devis courant ?")) {
+      if (confirm("Nouveau devis : effacer le devis courant ?")){
         localStorage.removeItem("cdc_devis");
         initModels();
         refresh();
         showToast("Devis vierge");
       }
     };
-    document.getElementById("btn-admin").onclick = function(){ document.getElementById("modal-admin").classList.add("open"); };
-    document.getElementById("btn-admin-cancel").onclick = function(){ document.getElementById("modal-admin").classList.remove("open"); };
-    document.getElementById("btn-admin-login").onclick = function(){
-      if (document.getElementById("admin-pass").value === "Oddysseus-34!") {
-        document.getElementById("admin-pass").value="";
-        showToast("Admin connecté");
-        document.getElementById("admin-content").style.display="block";
-        renderAdmin();
-      } else alert("Mot de passe incorrect");
+
+    document.getElementById("btn-admin").onclick = function(){
+      document.getElementById("modal-admin").classList.add("open");
+      document.getElementById("admin-content").style.display = "none";
+      document.getElementById("admin-pass").value = "";
     };
+    document.getElementById("btn-admin-cancel").onclick = function(){
+      document.getElementById("modal-admin").classList.remove("open");
+    };
+    document.getElementById("btn-admin-login").onclick = function(){
+      if (document.getElementById("admin-pass").value === "Oddysseus-34!"){
+        document.getElementById("admin-content").style.display = "block";
+        showToast("Admin connecté");
+        renderAdmin();
+      } else {
+        alert("Mot de passe incorrect");
+      }
+    };
+
+    // Onglets admin
+    document.querySelectorAll(".tabs button").forEach(btn=>{
+      btn.onclick = function(){
+        let tab = this.getAttribute("data-tab");
+        // boutons
+        document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+        this.classList.add("active");
+        // contenus
+        document.querySelectorAll(".tab-content").forEach(tc=>tc.classList.remove("active"));
+        let tc = document.getElementById("tab-"+tab);
+        if (tc) tc.classList.add("active");
+      };
+    });
+
     function renderAdmin(){
+      // Prestations
       let ap = document.getElementById("admin-prestations");
-      ap.innerHTML="";
+      ap.innerHTML = "";
       services.forEach(s=>{
-        let d=document.createElement("div");
-        d.textContent=`${s.label} — PU:${s.pu.toFixed(2)} — min:${s.min.toFixed(2)} — unité:${s.unite}`;
+        let d = document.createElement("div");
+        d.textContent = `${s.label} — PU:${s.pu.toFixed(2)} — min:${s.min.toFixed(2)} — unité:${s.unite}`;
         let btn = document.createElement("button");
-        btn.textContent="✏️"; btn.classList.add("btn-small");
-        btn.onclick=()=> {
+        btn.textContent = "✏️"; btn.classList.add("btn-small");
+        btn.onclick = ()=>{
           let np = prompt("Nouveau PU pour "+s.label, s.pu);
-          if (np!==null) { s.pu=parseFloat(np); lsSet("cdc_services",services); refresh(); }
+          if (np!==null){
+            s.pu = parseFloat(np);
+            if (isNaN(s.pu)) s.pu = DEFAULT_SERVICES.find(ds=>ds.id===s.id).pu;
+            lsSet("cdc_services", services);
+            refresh();
+          }
         };
         d.append(btn);
         ap.append(d);
-      }
-      );
+      });
+      // Add‑ons
       let aa = document.getElementById("admin-addons");
-      aa.innerHTML="";
+      aa.innerHTML = "";
       addons.forEach(ad=>{
-        let d=document.createElement("div");
-        d.textContent=`${ad.label} — PU:${ad.pu.toFixed(2)}`;
+        let d = document.createElement("div");
+        d.textContent = `${ad.label} — PU:${ad.pu.toFixed(2)}`;
         let btn = document.createElement("button");
-        btn.textContent="✏️"; btn.classList.add("btn-small");
-        btn.onclick=()=> {
+        btn.textContent = "✏️"; btn.classList.add("btn-small");
+        btn.onclick = ()=>{
           let np = prompt("PU add‑on "+ad.label, ad.pu);
-          if (np!==null) { ad.pu=parseFloat(np); lsSet("cdc_addons",addons); refresh(); }
+          if (np!==null){
+            ad.pu = parseFloat(np);
+            if (isNaN(ad.pu)) ad.pu = DEFAULT_ADDONS.find(da=>da.id===ad.id).pu;
+            lsSet("cdc_addons", addons);
+            refresh();
+          }
         };
         d.append(btn);
         aa.append(d);
       });
+      // Déplacement
       let inpF = document.getElementById("admin-forfait-h3430");
       inpF.value = config.forfaitHors3430;
-      inpF.onchange = e=> { config.forfaitHors3430 = parseFloat(e.target.value)||0; lsSet("cdc_config",config); refresh(); };
-      let inpC1 = document.getElementById("admin-company-name");
-      inpC1.value = config.company.name;
-      inpC1.onchange = e=> { config.company.name = e.target.value; lsSet("cdc_config",config); };
-      // idem pour email, phone, siren, etc.
+      inpF.onchange = e=>{
+        config.forfaitHors3430 = parseFloat(e.target.value)||0;
+        lsSet("cdc_config", config);
+        refresh();
+      };
+      // Mentions PDF
+      let im = document.getElementById("admin-mentions");
+      im.value = config.mentionsPdf;
+      im.onchange = e=>{
+        config.mentionsPdf = e.target.value;
+        lsSet("cdc_config", config);
+      };
+      // Identité & couleurs
+      document.getElementById("admin-company-name").value = config.company.name;
+      document.getElementById("admin-company-name").onchange = e=>{ config.company.name = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-siren").value = config.company.siren;
+      document.getElementById("admin-company-siren").onchange = e=>{ config.company.siren = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-address").value = config.company.address;
+      document.getElementById("admin-company-address").onchange = e=>{ config.company.address = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-email").value = config.company.email;
+      document.getElementById("admin-company-email").onchange = e=>{ config.company.email = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-phone").value = config.company.phone;
+      document.getElementById("admin-company-phone").onchange = e=>{ config.company.phone = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-iban").value = config.company.iban;
+      document.getElementById("admin-company-iban").onchange = e=>{ config.company.iban = e.target.value; lsSet("cdc_config", config); };
+      document.getElementById("admin-company-cgvUrl").value = config.company.cgvUrl;
+      document.getElementById("admin-company-cgvUrl").onchange = e=>{ config.company.cgvUrl = e.target.value; lsSet("cdc_config", config); };
       let cb = document.getElementById("admin-color-bleu");
       cb.value = config.colors.blue;
-      cb.onchange = e=> { config.colors.blue = e.target.value; document.documentElement.style.setProperty("--bleu", e.target.value); lsSet("cdc_config",config); };
+      cb.onchange = e=>{ config.colors.blue = e.target.value; document.documentElement.style.setProperty("--bleu", e.target.value); lsSet("cdc_config", config); };
       let co = document.getElementById("admin-color-orange");
       co.value = config.colors.orange;
-      co.onchange = e=> { config.colors.orange = e.target.value; document.documentElement.style.setProperty("--orange", e.target.value); lsSet("cdc_config",config); };
+      co.onchange = e=>{ config.colors.orange = e.target.value; document.documentElement.style.setProperty("--orange", e.target.value); lsSet("cdc_config", config); };
     }
-    function restoreDefaults(){
-      if (confirm("Restaurer configuration par défaut ?")) {
+
+    document.getElementById("btn-restore-defaults").onclick = function(){
+      if (confirm("Restaurer configuration par défaut ?")){
         localStorage.removeItem("cdc_services");
         localStorage.removeItem("cdc_addons");
         localStorage.removeItem("cdc_config");
@@ -611,10 +634,9 @@
         refresh();
         showToast("Configuration restaurée");
       }
-    }
-    document.getElementById("btn-restore-defaults").onclick = restoreDefaults;
+    };
     document.getElementById("btn-load-tests").onclick = function(){
-      if (confirm("Charger cas tests (écrasera devis actuel) ?")) {
+      if (confirm("Charger cas tests (écrasera devis actuel) ?")){
         devis.lignes = [
           {id:"t1",serviceId:"s1",qte:200,unite:services.find(s=>s.id==="s1").unite,pu:services.find(s=>s.id==="s1").pu,min:services.find(s=>s.id==="s1").min,hors3430:false,addons:[]},
           {id:"t2",serviceId:"s4",qte:800,unite:services.find(s=>s.id==="s4").unite,pu:services.find(s=>s.id==="s4").pu,min:services.find(s=>s.id==="s4").min,hors3430:false,addons:[]}
@@ -623,25 +645,14 @@
         showToast("Tests chargés");
       }
     };
-    function checkVent(){
-      let v=parseFloat(document.getElementById("vent").value)||0;
-      let t=document.getElementById("missionType").value;
-      let seuil = config.seuilsVent[t]||Infinity;
-      let motif = config.motifsVent[t]||"";
-      let al = document.getElementById("alerteVent");
-      if (v > seuil) {
-        al.textContent = "⚠️ " + motif;
-        al.style.display="block";
-      } else al.style.display="none";
-    }
+
     function showToast(m){
       let t = document.getElementById("toaster");
       t.textContent = m;
       t.classList.add("show");
-      setTimeout(()=>t.classList.remove("show"),2000);
+      setTimeout(()=> t.classList.remove("show"),2000);
     }
 
-    // Init
     window.onload = function(){
       initModels();
       renderSections();
